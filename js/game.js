@@ -75,9 +75,6 @@ const Game = (() => {
   // paint override (6-hex string like 'ff5e3d', or null for the stock factory paint)
   let paintOverride = null;
 
-  // highway curvature — the road turns left/right as you drive
-  let roadYaw = 0, roadYawTarget = 0, roadYawTimer = 0;
-
   // scenery
   let sideSlots = [], skySlots = [], cloudSlots = [], streakSlots = [];
 
@@ -1100,9 +1097,6 @@ const Game = (() => {
     const cdEl = document.getElementById('countdown');
     if (cdEl) { cdEl.textContent = '3'; cdEl.style.opacity = 0; }
 
-    // the highway starts straight, then its turns roll in
-    roadYaw = 0; roadYawTarget = 0; roadYawTimer = 1.5 + Math.random() * 1.5;
-
     for (const o of obstacles) scene.remove(o.mesh);
     obstacles.length = 0;
     for (const c of coinPool) { c.active = false; c.group.visible = false; }
@@ -1522,15 +1516,6 @@ const Game = (() => {
         s.mesh.position.x = LANES[(Math.random() * 3) | 0] + (Math.random() - 0.5) * 2.6;
       }
     }
-    /* --- highway turns: the road slowly curves left & right --- */
-    roadYawTimer -= dt;
-    if (roadYawTimer <= 0) {
-      const picks = [-0.5, -0.26, 0.26, 0.5];
-      roadYawTarget = Math.random() < 0.2 ? 0 : picks[(Math.random() * picks.length) | 0];
-      roadYawTimer = 3.4 + Math.random() * 3.4;
-    }
-    roadYaw += (roadYawTarget - roadYaw) * Math.min(1, dt * 0.65);
-
     /* --- camera --- */
     const k = 1 - Math.exp(-dt * 5.2);
     if (camMode === 'cockpit') {
@@ -1547,11 +1532,6 @@ const Game = (() => {
       camera.position.z += (camBase.z + speed * 0.012 - camera.position.z) * k;
       camera.lookAt(lookX, 1.15, -3);
     }
-
-    // follow the highway curve: the view yaws into the turn and banks slightly
-    camera.rotation.y += roadYaw * 0.92;
-    camera.rotation.z += roadYaw * 0.05 * Math.min(1, speed / 40);
-    camera.position.x += Math.sin(roadYaw) * 1.7;
 
     // cockpit interior reacts to the driver
     if (cockpitWheel) {
