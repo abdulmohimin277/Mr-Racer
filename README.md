@@ -20,7 +20,7 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 - **Drifting** — hold `X` / `SHIFT` to slide, tighten corners and earn drift points (tyre smoke + skid sound)
 - **6 selectable cars + paint shop** — pick your ride (EMBER GT, BLAZE X, NIGHT FANG, GOLD RUSH, COMET RS,
   ONYX GT) and repaint it in the menu (red, orange, gold, sky blue, neon green, pearl white, midnight black); all saved
-- **Road variety** — the highway passes under overpass bridges with glowing orange under-lights and through a long lit tunnel
+- **Road variety** — the highway passes under flyover bridges with glowing orange under-lights
 - **Day / night cycle** — optional: the highway world can roll through DAY → SUNSET → NIGHT → SUNRISE on a loop (windows light up at night, neon strips burn brighter); DAY is the default theme
 - **Busy traffic** — dense traffic with **convoys** (streams of cars in one lane) and side-by-side **wall formations** on harder difficulties
 - **Main menu** — START / HOW TO PLAY / difficulty selector (Easy, Medium, Hard) / sound toggle / best score

@@ -75,8 +75,8 @@ const Game = (() => {
   // paint override (6-hex string like 'ff5e3d', or null for the stock factory paint)
   let paintOverride = null;
 
-  // road architecture: overpasses + one long tunnel
-  let archSlots = [], tunnelGroup = null;
+  // road architecture: flyover bridges
+  let archSlots = [];
 
   // scenery
   let sideSlots = [], skySlots = [], cloudSlots = [], streakSlots = [];
@@ -533,12 +533,12 @@ const Game = (() => {
     }
   }
 
-  /* ---------------- road architecture (overpasses + tunnel) ---------------- */
+  /* ---------------- road architecture (flyover bridges) ---------------- */
   function makeArchSlots() {
     const deckMat = new THREE.MeshStandardMaterial({ color: 0x3a3130, roughness: 0.9 });
     const postMat = new THREE.MeshStandardMaterial({ color: 0x2c2118, roughness: 0.95 });
     const stripMat = new THREE.MeshBasicMaterial({ color: 0xff8c1f });
-    for (let i = 0; i < (IS_MOBILE ? 2 : 3); i++) {
+    for (let i = 0; i < (IS_MOBILE ? 3 : 5); i++) {
       const g = new THREE.Group();
       const deck = new THREE.Mesh(new THREE.BoxGeometry(26, 2.2, 7), deckMat);
       deck.position.y = 6.4;
@@ -555,39 +555,11 @@ const Game = (() => {
           g.add(post);
         }
       }
-      const slot = { group: g, z: 24 - 90 - i * 95 };
+      const slot = { group: g, z: 24 - 90 - i * 100 };
       g.position.set(0, 0, slot.z);
       scene.add(g);
       archSlots.push(slot);
     }
-  }
-
-  function makeTunnel() {
-    const g = new THREE.Group();
-    const wallMat = new THREE.MeshBasicMaterial({ color: 0x241a10 });
-    const ceilMat = new THREE.MeshBasicMaterial({ color: 0x2a1d12 });
-    const length = 150;
-    const wallGeo = new THREE.BoxGeometry(0.5, 7, length);
-    for (const px of [-7.35, 7.35]) {
-      const wl = new THREE.Mesh(wallGeo, wallMat);
-      wl.position.set(px, 3.5, 0);
-      g.add(wl);
-    }
-    const ceil = new THREE.Mesh(new THREE.BoxGeometry(15.2, 0.4, length), ceilMat);
-    ceil.position.y = 7.0;
-    g.add(ceil);
-    const neon = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.16, length), new THREE.MeshBasicMaterial({ color: 0xff8c1f }));
-    neon.position.y = 6.6;
-    g.add(neon);
-    const frameMat = new THREE.MeshBasicMaterial({ color: 0x151009 });
-    for (const fz of [-length / 2, length / 2]) {
-      const frameT = new THREE.Mesh(new THREE.BoxGeometry(15.2, 7.8, 0.8), frameMat);
-      frameT.position.set(0, 3.9, fz);
-      g.add(frameT);
-    }
-    g.position.set(0, 0, -40);
-    scene.add(g);
-    tunnelGroup = g;
   }
 
   /* ---------------- pools ---------------- */
@@ -1157,9 +1129,8 @@ const Game = (() => {
     const cdEl = document.getElementById('countdown');
     if (cdEl) { cdEl.textContent = '3'; cdEl.style.opacity = 0; }
 
-    // reposition road architecture for a consistent opening view
-    if (tunnelGroup) tunnelGroup.position.z = -40;
-    for (let i = 0; i < archSlots.length; i++) archSlots[i].z = 24 - 90 - i * 95;
+    // reposition flyover bridges for a consistent opening view
+    for (let i = 0; i < archSlots.length; i++) archSlots[i].z = 24 - 90 - i * 100;
 
     for (const o of obstacles) scene.remove(o.mesh);
     obstacles.length = 0;
@@ -1581,10 +1552,6 @@ const Game = (() => {
       if (a.z > 26) a.z -= 460;
       a.group.position.z = a.z;
     }
-    if (tunnelGroup) {
-      tunnelGroup.position.z += scroll;
-      if (tunnelGroup.position.z > 156) tunnelGroup.position.z -= 466;
-    }
 
     /* --- camera --- */
     const k = 1 - Math.exp(-dt * 5.2);
@@ -1711,7 +1678,6 @@ const Game = (() => {
     makeClouds();
     makeStreaks();
     makeArchSlots();
-    makeTunnel();
     updateDayNight();                  // re-paint with lights + scenery for the current time of day
     makePlayer();
     makeCockpit();
