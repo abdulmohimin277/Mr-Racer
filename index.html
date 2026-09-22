@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>NEON RUSH — 3D Highway Racer</title>
+<meta name="description" content="A 3D highway car racing game built with JavaScript and Three.js — dodge traffic, grab coins, and blast obstacles with your nitro guns." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Three.js renders into this -->
+  <div id="game-root"></div>
+
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-panel hud-score">
+        <span class="hud-label">SCORE</span>
+        <span id="hud-score">0</span>
+      </div>
+      <div class="hud-panel hud-center">
+        <span class="hud-label">COINS</span>
+        <span class="hud-coins"><span id="hud-coins">0</span> ⛁</span>
+      </div>
+      <div class="hud-panel hud-right">
+        <span class="hud-label">BEST</span>
+        <span id="hud-best">0</span>
+      </div>
+    </div>
+    <div class="hud-mid">
+      <div class="lives" id="hud-lives" title="Lives">
+        <span class="life"></span><span class="life"></span><span class="life"></span>
+      </div>
+      <div class="speedo">
+        <div class="speedo-bar"><div class="speedo-fill" id="speedo-fill"></div></div>
+        <span class="speedo-num">
+          <span id="hud-speed">0</span><em>km/h</em>
+        </span>
+      </div>
+      <div class="cooldown-wrap">
+        <div class="cooldown-label">GUN CHARGE</div>
+        <div class="cooldown-bar"><div class="cooldown-fill" id="cooldown-fill"></div></div>
+      </div>
+    </div>
+    <div class="hud-hints">← → steer &nbsp;·&nbsp; ↑ accelerate &nbsp;·&nbsp; SPACE shoot &nbsp;·&nbsp; P pause</div>
+    <div id="float-layer"></div>
+  </div>
+
+  <!-- Damage vignette -->
+  <div id="damage-vignette"></div>
+  <div id="low-hp-bar"></div>
+
+  <!-- ===================== SCREENS ===================== -->
+
+  <!-- MAIN MENU -->
+  <div id="screen-menu" class="screen">
+    <div class="menu-card">
+      <div class="logo">
+        <div class="logo-flare"></div>
+        <h1 class="game-title">NEON<span class="title-accent">RUSH</span></h1>
+        <p class="game-sub">3D HIGHWAY RACER</p>
+      </div>
+
+      <div class="menu-controls">
+        <button id="btn-play" class="btn btn-primary">▶&nbsp; START RACE</button>
+
+        <div class="menu-row">
+          <div class="diff-select">
+            <span class="row-label">DIFFICULTY</span>
+            <div class="seg" id="diff-seg">
+              <button data-diff="easy" class="seg-btn active">EASY</button>
+              <button data-diff="medium" class="seg-btn">MEDIUM</button>
+              <button data-diff="hard" class="seg-btn">HARD</button>
+            </div>
+          </div>
+          <div class="sound-select">
+            <span class="row-label">SOUND</span>
+            <div class="seg" id="sound-seg">
+              <button id="btn-sound" class="seg-btn active">🔊 ON</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-howto" class="btn btn-ghost">ℹ&nbsp; HOW TO PLAY</button>
+      </div>
+
+      <div class="menu-foot">
+        <span class="best-badge">🏆 BEST SCORE&nbsp; <b id="menu-best">0</b></span>
+        <span class="foot-tip">Hold <kbd>↑</kbd> to speed up &amp; blast the traffic with <kbd>SPACE</kbd></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY -->
+  <div id="screen-howto" class="screen hidden">
+    <div class="menu-card">
+      <h2 class="screen-title">HOW TO PLAY</h2>
+      <div class="howto-grid">
+        <div class="howto-item"><span class="key">←</span><span class="key">→</span><div><b>Steer</b><p>Move between lanes — also A / D</p></div></div>
+        <div class="howto-item"><span class="key">↑</span><span class="key">W</span><div><b>Accelerate</b><p>Go faster, more distance = more score</p></div></div>
+        <div class="howto-item"><span class="key">SPACE</span><div><b>Blaster</b><p>Shoot traffic &amp; barriers. Kills refill your gun charge.</p></div></div>
+        <div class="howto-item"><span class="key">P</span><span class="key">ESC</span><div><b>Pause</b><p>R = quick restart, M = mute, N = refill blaster</p></div></div>
+        <div class="howto-item"><span class="coin-icon">⛁</span><div><b>Coins</b><p>Collect golden coins for bonus points.</p></div></div>
+        <div class="howto-item"><span class="health-icon">♥</span><div><b>Lives</b><p>You have 3 lives. Collisions cost one.</p></div></div>
+      </div>
+      <button id="btn-howto-back" class="btn btn-ghost">←&nbsp; BACK</button>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="screen-pause" class="screen hidden">
+    <div class="menu-card small">
+      <h2 class="screen-title">GAME PAUSED</h2>
+      <button id="btn-resume" class="btn btn-primary">▶&nbsp; RESUME</button>
+      <button id="btn-restart" class="btn btn-ghost">↻&nbsp; RESTART</button>
+      <button id="btn-menu" class="btn btn-ghost">🏠&nbsp; MAIN MENU</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="screen-gameover" class="screen hidden">
+    <div class="menu-card">
+      <h2 class="gameover-title">RACE OVER</h2>
+      <div class="stats-grid">
+        <div class="stat"><span class="stat-label">SCORE</span><span id="go-score" class="stat-value">0</span></div>
+        <div class="stat"><span class="stat-label">COINS</span><span id="go-coins" class="stat-value">0</span></div>
+        <div class="stat"><span class="stat-label">DISTANCE</span><span id="go-distance" class="stat-value">0 m</span></div>
+        <div class="stat"><span class="stat-label">TRAFFIC BLASTED</span><span id="go-kills" class="stat-value">0</span></div>
+      </div>
+      <div class="new-best hidden" id="new-best-badge">🏆 NEW BEST SCORE!</div>
+      <button id="btn-retry" class="btn btn-primary">↻&nbsp; RACE AGAIN</button>
+      <button id="btn-gomenu" class="btn btn-ghost">🏠&nbsp; MAIN MENU</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="screen-loading" class="screen">
+    <div class="loading-inner">
+      <div class="loading-icon">🚗</div>
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+      <p>SHIFTING GEARS…</p>
+    </div>
+  </div>
+
+  <!-- Touch controls (shown automatically on touch devices) -->
+  <div id="touch-controls" class="hidden">
+    <div class="touch-btns">
+      <button class="tbtn" data-touch="left" aria-label="Left">◀</button>
+      <button class="tbtn" data-touch="right" aria-label="Right">▶</button>
+    </div>
+    <button class="tbtn tbtn-fire" data-touch="fire" aria-label="Shoot">🎯</button>
+    <button class="tbtn tbtn-gaspedal" data-touch="gas" aria-label="Accelerate">▲</button>
+  </div>
+
+  <!-- Three.js (CDN with fallback) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+  <script>
+    // Fallback CDN if the first one fails
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://unpkg.com/three@0.160.0/build/three.min.js"><\/script>');
+    }
+  </script>
+  <script src="js/audio.js"></script>
+  <script src="js/car.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
