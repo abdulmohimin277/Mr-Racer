@@ -128,6 +128,18 @@
     });
     restoreCar();
 
+    // paint selection (custom colour overrides the factory paint)
+    document.querySelectorAll('#paint-seg .paint-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#paint-seg .paint-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        Game.setPaint(btn.dataset.paint || null);
+        try { localStorage.setItem('neonrush_paint', btn.dataset.paint || ''); } catch (e) {}
+        AudioFX.sfx.ui();
+      });
+    });
+    restorePaint();
+
     // time-of-day selector
     document.querySelectorAll('#time-seg .seg-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -147,6 +159,15 @@
     Game.setCar(car);
     document.querySelectorAll('#car-seg .seg-btn').forEach((b) => {
       b.classList.toggle('active', b.dataset.car === car);
+    });
+  }
+
+  function restorePaint() {
+    let p = '';
+    try { p = localStorage.getItem('neonrush_paint') || ''; } catch (e) {}
+    Game.setPaint(p || null);
+    document.querySelectorAll('#paint-seg .paint-btn').forEach((b) => {
+      b.classList.toggle('active', (b.dataset.paint || '') === p);
     });
   }
 

@@ -386,6 +386,56 @@ kbd {
 /* camera toggle button is narrower so it fits beside pause */
 .touch-cam { min-width: 70px; }
 
+/* Start countdown (3·2·1·GO) */
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-title);
+  font-size: 140px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--neon-orange);
+  text-shadow: 0 0 34px rgba(255, 140, 31, 0.85);
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.14s ease;
+}
+#countdown { letter-spacing: 6px; }
+
+/* Combo multiplier meter */
+.combo {
+  position: absolute;
+  right: 20px;
+  top: 42%;
+  min-width: 132px;
+  text-align: right;
+  font-family: var(--font-title);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--neon-yellow);
+  text-shadow: 0 0 14px rgba(255, 210, 61, 0.75);
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.2s ease;
+}
+.combo-fill {
+  height: 4px;
+  margin-top: 7px;
+  margin-left: auto;
+  width: 0%;
+  background: var(--neon-orange);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(255, 140, 31, 0.8);
+}
+
+/* Paint picker swatches */
+.paint-seg { flex-wrap: wrap; }
+.paint-seg .seg-btn { padding: 7px 9px; }
+
 .hud-mid {
   position: absolute;
   left: 20px;
@@ -567,4 +617,6 @@ body.touch .hud-hints { display: none; }
   .hud-panel { min-width: 62px; padding: 6px 10px; border-radius: 10px; }
   .hud-panel span[id] { font-size: 15px; }
   .touch-pause { min-width: 58px; font-size: 9px; letter-spacing: 1px; }
+  .countdown { font-size: 96px; }
+  .combo { right: 12px; font-size: 14px; }
 }

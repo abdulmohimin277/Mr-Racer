@@ -49,6 +49,8 @@
       </div>
     </div>
     <div class="hud-hints">← → steer &nbsp;·&nbsp; ↑ accelerate &nbsp;·&nbsp; SPACE shoot &nbsp;·&nbsp; P pause</div>
+    <div id="countdown" class="countdown" style="opacity:0">3</div>
+    <div id="combo" class="combo" style="opacity:0"><span id="combo-label">COMBO ×1.0</span><div class="combo-fill" id="combo-fill"></div></div>
     <div id="float-layer"></div>
   </div>
 
@@ -97,6 +99,24 @@
               <button data-car="blaze" class="seg-btn car-btn" title="BLAZE X"><span class="swatch" style="background:#ff3b10"></span>BLAZE</button>
               <button data-car="shadow" class="seg-btn car-btn" title="NIGHT FANG"><span class="swatch" style="background:#39404f"></span>SHADOW</button>
               <button data-car="gold" class="seg-btn car-btn" title="GOLD RUSH"><span class="swatch" style="background:#ffd23d"></span>GOLD</button>
+              <button data-car="comet" class="seg-btn car-btn" title="COMET RS"><span class="swatch" style="background:#ff5e3d"></span>COMET</button>
+              <button data-car="onyx" class="seg-btn car-btn" title="ONYX GT"><span class="swatch" style="background:#2a2e37"></span>ONYX</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-row">
+          <div class="diff-select" style="flex:1">
+            <span class="row-label">PAINT</span>
+            <div class="seg paint-seg" id="paint-seg">
+              <button class="paint-btn seg-btn" data-paint="" title="Factory paint"><span class="swatch" style="background:#ffc219"></span>STOCK</button>
+              <button class="paint-btn seg-btn" data-paint="ff3b10" title="Hot red"><span class="swatch" style="background:#ff3b10"></span></button>
+              <button class="paint-btn seg-btn" data-paint="ff7a1a" title="Pumpkin"><span class="swatch" style="background:#ff7a1a"></span></button>
+              <button class="paint-btn seg-btn" data-paint="ffd23d" title="Gold"><span class="swatch" style="background:#ffd23d"></span></button>
+              <button class="paint-btn seg-btn" data-paint="4dd6ff" title="Sky blue"><span class="swatch" style="background:#4dd6ff"></span></button>
+              <button class="paint-btn seg-btn" data-paint="8ef06e" title="Neon green"><span class="swatch" style="background:#8ef06e"></span></button>
+              <button class="paint-btn seg-btn" data-paint="f5f2ea" title="Pearl white"><span class="swatch" style="background:#f5f2ea"></span></button>
+              <button class="paint-btn seg-btn" data-paint="14161b" title="Midnight black"><span class="swatch" style="background:#14161b"></span></button>
             </div>
           </div>
         </div>
@@ -133,6 +153,7 @@
         <div class="howto-item"><span class="key">P</span><span class="key">ESC</span><div><b>Pause</b><p>R = quick restart, M = mute, N = refill blaster</p></div></div>
         <div class="howto-item"><span class="coin-icon">⛁</span><div><b>Coins</b><p>Collect golden coins for bonus points.</p></div></div>
         <div class="howto-item"><span class="health-icon">♥</span><div><b>Lives</b><p>You have 3 lives. Collisions cost one.</p></div></div>
+        <div class="howto-item"><span class="coin-icon">🔥</span><div><b>Combos</b><p>Near-misses &amp; blaster kills build a COMBO multiplier up to ×4 — keep it alive for big scores!</p></div></div>
         <div class="howto-item"><span class="coin-icon">👆</span><div><b>Touch</b><p>On phones/tablets use the on-screen buttons. Tap ▲ once to cruise, tap again to release.</p></div></div>
       </div>
       <button id="btn-howto-back" class="btn btn-ghost">←&nbsp; BACK</button>

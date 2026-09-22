@@ -16,6 +16,8 @@ const Game = (() => {
     { id: 'blaze',  name: 'BLAZE X',    color: 0xff3b10, glow: 0xff8c1f },
     { id: 'shadow', name: 'NIGHT FANG', color: 0x39404f, glow: 0xff7a1a },
     { id: 'gold',   name: 'GOLD RUSH',  color: 0xffd23d, glow: 0xffb347 },
+    { id: 'comet',  name: 'COMET RS',   color: 0xff5e3d, glow: 0xffb347 },
+    { id: 'onyx',   name: 'ONYX GT',    color: 0x2a2e37, glow: 0xff8c1f },
   ];
 
   const LANES = [-4.666, 0, 4.666];
@@ -64,6 +66,17 @@ const Game = (() => {
   // cockpit (in-car) view
   let camMode = 'chase';                  // chase | cockpit
   let cockpit = null, cockpitWheel = null, cockpitNeedlePivot = null;
+  let mirrorCanvas = null, mirrorCtx = null, mirrorTex = null;
+
+  // start countdown + combo scoring
+  let countingDown = false, countdownT = 0, goPlayed = false;
+  let combo = 0, comboT = 0;
+
+  // paint override (6-hex string like 'ff5e3d', or null for the stock factory paint)
+  let paintOverride = null;
+
+  // road architecture: overpasses + one long tunnel
+  let archSlots = [], tunnelGroup = null;
 
   // scenery
   let sideSlots = [], skySlots = [], cloudSlots = [], streakSlots = [];
@@ -439,7 +452,8 @@ const Game = (() => {
 
   function makeSideSlots() {
     const types = ['tree', 'tree', 'tree', 'tree', 'light', 'light', 'light', 'billboard', 'pylon', 'tree'];
-    for (let i = 0; i < 42; i++) {
+    const n = IS_MOBILE ? 26 : 42;
+    for (let i = 0; i < n; i++) {
       const t = types[(Math.random() * types.length) | 0];
       const g = buildProp(t);
       const slot = { type: t, group: g, z: 20 - Math.random() * 460 };
@@ -464,7 +478,7 @@ const Game = (() => {
 
   function makeSkyline() {
     const winTex = makeWindowTex();
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0; i < (IS_MOBILE ? 14 : 22); i++) {
       const h = 14 + Math.random() * 50;
       const w = 9 + Math.random() * 13;
       const mat = new THREE.MeshStandardMaterial({
@@ -491,7 +505,7 @@ const Game = (() => {
 
   function makeClouds() {
     const tex = cloudTex();
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < (IS_MOBILE ? 6 : 9); i++) {
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({
         map: tex, transparent: true, opacity: 0.42, depthWrite: false, color: 0xffb9d8,
       }));
@@ -504,7 +518,7 @@ const Game = (() => {
 
   function makeStreaks() {
     const colors = [0xffb347, 0xff8c1f, 0xffd23d];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < (IS_MOBILE ? 10 : 16); i++) {
       const m = new THREE.Mesh(
         new THREE.PlaneGeometry(0.14, 4),
         new THREE.MeshBasicMaterial({
@@ -517,6 +531,63 @@ const Game = (() => {
       scene.add(m);
       streakSlots.push({ mesh: m });
     }
+  }
+
+  /* ---------------- road architecture (overpasses + tunnel) ---------------- */
+  function makeArchSlots() {
+    const deckMat = new THREE.MeshStandardMaterial({ color: 0x3a3130, roughness: 0.9 });
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x2c2118, roughness: 0.95 });
+    const stripMat = new THREE.MeshBasicMaterial({ color: 0xff8c1f });
+    for (let i = 0; i < (IS_MOBILE ? 2 : 3); i++) {
+      const g = new THREE.Group();
+      const deck = new THREE.Mesh(new THREE.BoxGeometry(26, 2.2, 7), deckMat);
+      deck.position.y = 6.4;
+      deck.castShadow = !IS_MOBILE;
+      g.add(deck);
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(26, 0.14, 6.8), stripMat);
+      strip.position.y = 5.26;
+      g.add(strip);
+      for (const px of [-12.5, 12.5]) {
+        for (const pz of [-2.4, 2.4]) {
+          const post = new THREE.Mesh(new THREE.BoxGeometry(1.1, 6.4, 1.1), postMat);
+          post.position.set(px, 3.2, pz);
+          post.castShadow = !IS_MOBILE;
+          g.add(post);
+        }
+      }
+      const slot = { group: g, z: 24 - 90 - i * 95 };
+      g.position.set(0, 0, slot.z);
+      scene.add(g);
+      archSlots.push(slot);
+    }
+  }
+
+  function makeTunnel() {
+    const g = new THREE.Group();
+    const wallMat = new THREE.MeshBasicMaterial({ color: 0x241a10 });
+    const ceilMat = new THREE.MeshBasicMaterial({ color: 0x2a1d12 });
+    const length = 150;
+    const wallGeo = new THREE.BoxGeometry(0.5, 7, length);
+    for (const px of [-7.35, 7.35]) {
+      const wl = new THREE.Mesh(wallGeo, wallMat);
+      wl.position.set(px, 3.5, 0);
+      g.add(wl);
+    }
+    const ceil = new THREE.Mesh(new THREE.BoxGeometry(15.2, 0.4, length), ceilMat);
+    ceil.position.y = 7.0;
+    g.add(ceil);
+    const neon = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.16, length), new THREE.MeshBasicMaterial({ color: 0xff8c1f }));
+    neon.position.y = 6.6;
+    g.add(neon);
+    const frameMat = new THREE.MeshBasicMaterial({ color: 0x151009 });
+    for (const fz of [-length / 2, length / 2]) {
+      const frameT = new THREE.Mesh(new THREE.BoxGeometry(15.2, 7.8, 0.8), frameMat);
+      frameT.position.set(0, 3.9, fz);
+      g.add(frameT);
+    }
+    g.position.set(0, 0, -40);
+    scene.add(g);
+    tunnelGroup = g;
   }
 
   /* ---------------- pools ---------------- */
@@ -711,7 +782,7 @@ const Game = (() => {
         : CarBuilder.buildTraffic();
       mesh.rotation.y = Math.PI;      // nose points forward (-z)
       mesh.position.set(x, 0, SPAWN_Z);
-      mesh.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+      mesh.traverse((o) => { if (o.isMesh) o.castShadow = !IS_MOBILE; });   // no traffic shadows on phones
       scene.add(mesh);
     }
     const info = obstacleTypes[type];
@@ -795,7 +866,8 @@ const Game = (() => {
 
   /* ---------------- player ---------------- */
   function makePlayer() {
-    const g = CarBuilder.buildSport(carOpt.color, { underglow: carOpt.glow });
+    const bodyColor = paintOverride !== null ? parseInt(paintOverride, 16) : carOpt.color;
+    const g = CarBuilder.buildSport(bodyColor, { underglow: carOpt.glow });
     const barMat = new THREE.MeshStandardMaterial({ color: 0x2a1a06, metalness: 0.85, roughness: 0.3 });
     for (const bx of [-0.55, 0.55]) {
       const b = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.5, 10), barMat);
@@ -943,6 +1015,28 @@ const Game = (() => {
     c.add(needlePivot);
     cockpitNeedlePivot = needlePivot;
 
+    // rear-view mirror (top centre of the windshield) — a live "fake" mirror canvas
+    mirrorCanvas = document.createElement('canvas');
+    mirrorCanvas.width = 128; mirrorCanvas.height = 64;
+    mirrorCtx = mirrorCanvas.getContext('2d');
+    mirrorTex = new THREE.CanvasTexture(mirrorCanvas);
+    mirrorTex.colorSpace = THREE.SRGBColorSpace;
+    const mirrorFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(0.56, 0.30, 0.02),
+      new THREE.MeshBasicMaterial({ color: 0x0d0a05 })
+    );
+    mirrorFrame.position.set(0, 0.42, -0.98);
+    c.add(mirrorFrame);
+    const mirror = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.5, 0.24),
+      new THREE.MeshBasicMaterial({ map: mirrorTex })
+    );
+    mirror.rotation.y = Math.PI;         // face the driver
+    mirror.rotation.x = 0.05;
+    mirror.position.copy(mirrorFrame.position);
+    c.add(mirror);
+    drawMirrorBack(0);                   // paint the initial frame
+
     cockpit = c;
     camera.add(c);
     c.visible = false;
@@ -953,12 +1047,67 @@ const Game = (() => {
     AudioFX.sfx.ui();
   }
 
+  /* combo multiplier: near-misses + kills stack a multiplier (up to ×4) */
+  function comboMult() { return Math.min(4, 1 + combo * 0.2); }
+
+  /* fake rear-view mirror drawn every frame while in cockpit view */
+  function drawMirrorBack(speed) {
+    if (!mirrorCtx) return;
+    const w = mirrorCanvas.width, h = mirrorCanvas.height;
+    const ctx = mirrorCtx;
+    ctx.fillStyle = '#1c140c';
+    ctx.fillRect(0, 0, w, h);
+    // glass shading
+    ctx.fillStyle = 'rgba(255,140,31,0.10)';
+    ctx.fillRect(0, 0, w, h);
+    // road + shoulder
+    ctx.fillStyle = '#2c2118';
+    ctx.fillRect(0, h * 0.46, w, h * 0.54);
+    ctx.fillStyle = '#19110a';
+    ctx.fillRect(0, h * 0.46, w, 2);
+    // our lane centre shifts with the car's lateral position
+    const cx = w / 2 - (player ? player.x * 4 : 0);
+    ctx.fillStyle = '#8a5a2a';
+    ctx.fillRect(cx - w * 0.18, h * 0.46, 2, h * 0.54);
+    ctx.fillRect(cx + w * 0.18, h * 0.46, 2, h * 0.54);
+    ctx.fillStyle = '#ffb347';
+    ctx.fillRect(cx - 1, h * 0.46, 2, 2);
+    // lane dashes rushing away behind us
+    if (speed) {
+      const off = ((speed * 34) % 14);
+      ctx.fillStyle = '#c98f4a';
+      for (let y = h * 0.46 - 12 + off; y > 2; y -= 14) ctx.fillRect(cx - 1.5, y, 3, 6);
+    }
+    // traffic behind the player, closest = lowest + biggest
+    if (obstacles && player) {
+      for (const o of obstacles) {
+        if (!o.alive || o.type === 'oil') continue;
+        const dz = PLAYER_Z - o.z;
+        if (dz < 2 || dz > 70) continue;
+        const y = h * 0.48 + (dz / 70) * (h * 0.5);
+        const s = 0.6 + (dz / 70) * 2.4;
+        const ox = cx + (o.x - player.x) * 4;
+        const rw = s * 3 + (o.type === 'truck' ? 2.5 : 0);
+        const rh = s * 4.5;
+        ctx.fillStyle = o.type === 'truck' ? '#d8a03a' : (o.type === 'barrier' || o.type === 'barrel') ? '#e6503f' : '#ff5e3d';
+        ctx.fillRect(ox - rw / 2, y, rw, rh);
+      }
+    }
+    if (mirrorTex) mirrorTex.needsUpdate = true;
+  }
+
+  function setPaint(hex) {
+    paintOverride = (hex && /^[0-9a-fA-F]{6}$/.test(hex)) ? hex.toLowerCase() : null;
+    if (player) rebuildPlayer();
+  }
+
   /* ---------------- HUD ---------------- */
   function cacheHud() {
     const $ = (id) => document.getElementById(id);
     hud = {
       score: $('hud-score'), coins: $('hud-coins'), best: $('hud-best'),
       speed: $('hud-speed'), speedFill: $('speedo-fill'), cooldownFill: $('cooldown-fill'),
+      combo: $('combo'), comboLabel: $('combo-label'), comboFill: $('combo-fill'),
       lives: Array.from(document.querySelectorAll('#hud-lives .life')),
     };
   }
@@ -970,6 +1119,15 @@ const Game = (() => {
     hud.best.textContent = bestScore();
     hud.speedFill.style.width = Math.min(100, (speed / diff.maxSpeed) * 100) + '%';
     hud.cooldownFill.style.width = (ammo / MAX_AMMO) * 100 + '%';
+    if (hud.combo) {
+      if (combo > 0) {
+        hud.combo.style.opacity = 1;
+        hud.comboLabel.textContent = 'COMBO ×' + comboMult().toFixed(1);
+        hud.comboFill.style.width = Math.min(100, (comboT / 3.5) * 100) + '%';
+      } else {
+        hud.combo.style.opacity = 0;
+      }
+    }
     hud.lives.forEach((el, i) => el.classList.toggle('lost', i >= lives));
   }
 
@@ -992,6 +1150,16 @@ const Game = (() => {
     ammo = MAX_AMMO; fireCooldown = 0;
     nextSpawn = 10; nextCoinSpawn = 4;
     laneCooldown = [0, 0, 0];
+
+    // fresh start: countdown + combo reset
+    countingDown = true; countdownT = 3.6; goPlayed = false;
+    combo = 0; comboT = 0;
+    const cdEl = document.getElementById('countdown');
+    if (cdEl) { cdEl.textContent = '3'; cdEl.style.opacity = 0; }
+
+    // reposition road architecture for a consistent opening view
+    if (tunnelGroup) tunnelGroup.position.z = -40;
+    for (let i = 0; i < archSlots.length; i++) archSlots[i].z = 24 - 90 - i * 95;
 
     for (const o of obstacles) scene.remove(o.mesh);
     obstacles.length = 0;
@@ -1049,9 +1217,11 @@ const Game = (() => {
 
     if (!isCrash) {
       kills++;
+      combo++; comboT = 3.5;
       ammo = Math.min(MAX_AMMO, ammo + 2);
-      score += ent.value;
-      FloatTexts.show('+' + ent.value, '#ffb347', pos.clone().setY(3), camera);
+      const gain = Math.round(ent.value * comboMult());
+      score += gain;
+      FloatTexts.show('+' + gain, '#ffb347', pos.clone().setY(3), camera);
     }
     scene.remove(ent.mesh);
   }
@@ -1160,16 +1330,58 @@ const Game = (() => {
     }
     if (state !== 'playing') return;
 
+    /* --- start countdown 3·2·1·GO --- */
+    if (countingDown) {
+      countdownT -= dt;
+      const el = document.getElementById('countdown');
+      if (countdownT > 0.2) {
+        el.style.opacity = 1;
+        const d = countdownT > 2.6 ? 3 : countdownT > 1.6 ? 2 : countdownT > 0.6 ? 1 : 0;
+        const txt = d === 0 ? 'GO!' : String(d);
+        if (el.textContent !== txt) {
+          el.textContent = txt;
+          if (d === 0) { if (!goPlayed) { goPlayed = true; AudioFX.sfx.start(); } }
+          else AudioFX.sfx.ui();
+        }
+      } else {
+        countingDown = false;
+        el.style.opacity = 0;
+      }
+      // hold the car steady while the camera settles into the chase position
+      speed = 0;
+      player.steer += (0 - player.steer) * Math.min(1, dt * 8);
+      player.vx += (0 - player.vx) * Math.min(1, dt * 5);
+      player.group.position.x = player.x;
+      player.group.position.y = Math.sin(sceneT * 26) * 0.02;
+      player.group.position.z = PLAYER_Z;
+      player.group.rotation.z = -player.steer - player.vx * 0.004;
+      player.group.rotation.x = -0.015;
+      const kd = 1 - Math.exp(-dt * 5.2);
+      camera.position.x += (player.x * 0.66 - camera.position.x) * kd;
+      camera.position.y += (camBase.y - camera.position.y) * kd;
+      camera.position.z += (camBase.z - camera.position.z) * kd;
+      camera.lookAt(player.x * 0.42, 1.15, -3);
+      AudioFX.engineUpdate(0.1 + Math.sin(sceneT * 9) * 0.04);
+      updateHud();
+      return;
+    }
+
     elapsed += dt;
     distance += speed * dt;
     score += speed * dt * 3 + dt * 8;
+
+    /* --- combo multiplier decay --- */
+    if (combo > 0) {
+      comboT -= dt;
+      if (comboT <= 0) combo = 0;
+    }
 
     /* --- drift state --- */
     const drifting = Boolean(input.drift) && speed > 18;
     if (drifting) {
       driftTime += dt;
       driftScoreClock += dt;
-      while (driftScoreClock > 0.25) { driftScoreClock -= 0.25; score += 6; }
+      while (driftScoreClock > 0.25) { driftScoreClock -= 0.25; score += 6 * comboMult(); }
       // tyre smoke from the rear wheels
       driftSmokeT -= dt;
       if (driftSmokeT <= 0) {
@@ -1265,8 +1477,10 @@ const Game = (() => {
       if (!o.passed && o.z > PLAYER_Z) {
         o.passed = true;
         if (Math.abs(o.x - player.x) < 2.5 && o.z - PLAYER_Z < 5) {
-          score += 25;
-          FloatTexts.show('NEAR MISS +25', '#ffd23d', o.mesh.position.clone().setY(3.5), camera);
+          combo++; comboT = 3.5;
+          const gain = Math.round(25 * comboMult());
+          score += gain;
+          FloatTexts.show('NEAR MISS +' + gain, '#ffd23d', o.mesh.position.clone().setY(3.5), camera);
         }
       }
       if (collidesPlayer(o)) {
@@ -1294,7 +1508,7 @@ const Game = (() => {
       if (Math.abs(c.group.position.z - PLAYER_Z) < 2.1 && Math.abs(c.group.position.x - player.x) < 1.5) {
         c.active = false; c.group.visible = false;
         coins++;
-        score += 50;
+        score += Math.round(50 * comboMult());
         AudioFX.sfx.coin();
         FloatTexts.show('+50', '#ffd23d', c.group.position.clone(), camera);
         Particles.burst(c.group.position.clone().setY(1.2), [0xffd23d, 0xfff3b0], 6, 2, 0);
@@ -1362,6 +1576,15 @@ const Game = (() => {
         s.mesh.position.x = LANES[(Math.random() * 3) | 0] + (Math.random() - 0.5) * 2.6;
       }
     }
+    for (const a of archSlots) {
+      a.z += scroll;
+      if (a.z > 26) a.z -= 460;
+      a.group.position.z = a.z;
+    }
+    if (tunnelGroup) {
+      tunnelGroup.position.z += scroll;
+      if (tunnelGroup.position.z > 156) tunnelGroup.position.z -= 466;
+    }
 
     /* --- camera --- */
     const k = 1 - Math.exp(-dt * 5.2);
@@ -1387,6 +1610,7 @@ const Game = (() => {
     if (cockpitNeedlePivot) {
       cockpitNeedlePivot.rotation.z = -Math.PI * 0.75 + Math.min(1, speed * 3.6 / 240) * Math.PI * 1.5;
     }
+    if (camMode === 'cockpit') drawMirrorBack(speed);
 
     const targetFov = (camMode === 'cockpit'
       ? camBase.fov + 12 + (speed / diff.maxSpeed) * 6
@@ -1486,6 +1710,8 @@ const Game = (() => {
     makeMountains();
     makeClouds();
     makeStreaks();
+    makeArchSlots();
+    makeTunnel();
     updateDayNight();                  // re-paint with lights + scenery for the current time of day
     makePlayer();
     makeCockpit();
@@ -1541,6 +1767,7 @@ const Game = (() => {
     bestScore,
     setInput,
     setCar,
+    setPaint,
     setTime,
     toggleCam,
     refillAmmo,

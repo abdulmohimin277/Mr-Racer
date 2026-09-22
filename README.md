@@ -5,7 +5,11 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 ## ✅ Features
 
 - **Cockpit view** — press `C` (or tap 📷 VIEW on phones) to sit inside the car: dashboard, orange
-  speedometer with a live needle, a steering wheel that turns with your inputs, A-pillars and roof bar
+  speedometer with a live needle, a steering wheel that turns with your inputs, A-pillars, roof bar
+  and a **working rear-view mirror** showing the traffic behind you
+- **Start countdown** — every race kicks off with a 3·2·1·GO grid-style countdown while the engine revs
+- **Combo multiplier** — near-misses and blaster kills build a COMBO meter; each chain multiplies your
+  score (up to ×4). Keep it alive by staying aggressive!
 - **3D cars** — procedurally modelled sport racer (player), sedans and cargo trucks (traffic) with real-time shadows
 - **Designed highway** — 3-lane road with scrolling lane markings, rumble strips, guardrails with glowing orange strips,
   streetlights, trees, billboards, pylons, a lit skyline, mountains, clouds and a big retro sliced sun with rays over a warm orange day
@@ -14,7 +18,9 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 - **Coins** — collect golden coin lines for bonus score (with sparkles & sounds)
 - **Guns** — twin nose blasters. Hold `SPACE` to fire; kills refund ammo; orange **+AMMO** pickups refill it
 - **Drifting** — hold `X` / `SHIFT` to slide, tighten corners and earn drift points (tyre smoke + skid sound)
-- **4 selectable cars** — pick your ride (EMBER GT, BLAZE X, NIGHT FANG, GOLD RUSH) in the main menu; choice is saved
+- **6 selectable cars + paint shop** — pick your ride (EMBER GT, BLAZE X, NIGHT FANG, GOLD RUSH, COMET RS,
+  ONYX GT) and repaint it in the menu (red, orange, gold, sky blue, neon green, pearl white, midnight black); all saved
+- **Road variety** — the highway passes under overpass bridges with glowing orange under-lights and through a long lit tunnel
 - **Day / night cycle** — optional: the highway world can roll through DAY → SUNSET → NIGHT → SUNRISE on a loop (windows light up at night, neon strips burn brighter); DAY is the default theme
 - **Busy traffic** — dense traffic with **convoys** (streams of cars in one lane) and side-by-side **wall formations** on harder difficulties
 - **Main menu** — START / HOW TO PLAY / difficulty selector (Easy, Medium, Hard) / sound toggle / best score
@@ -50,9 +56,10 @@ The game is fully playable on phones & tablets — on-screen controls appear aut
 - **📷 VIEW** — toggle the in-car cockpit view (dashboard + steering wheel) on the HUD top row
 
 On touch devices the game automatically lowers the render quality (shadows, pixel ratio,
-antialiasing) and widens the camera FOV for portrait screens so you can still see the road ahead.
-Safe-area insets (notch / home bar) are respected. To test on your phone, run the server and open
-`http://<your-PC-LAN-IP>:8899` from the phone (same Wi-Fi).
+antialiasing, scenery density, traffic shadows) and widens the camera FOV for portrait screens so you
+can still see the road ahead. Safe-area insets (notch / home bar) are respected. To test on your phone,
+run the server and open `http://<your-PC-LAN-IP>:8899` from the phone (same Wi-Fi) — or just use the live
+GitHub Pages link above.
 
 ## 🚀 How to run
 
