@@ -164,6 +164,14 @@ const AudioFX = (() => {
     skid() {
       noise(0.22, 0.16, 2600, 'highpass');
     },
+    horn() {
+      // classic dual-tone horn blast (two short honks)
+      blip({ freq: 233, endFreq: 200, dur: 0.42, type: 'square', vol: 0.30 });
+      blip({ freq: 349, endFreq: 300, dur: 0.42, type: 'square', vol: 0.22 });
+      blip({ freq: 233, endFreq: 200, dur: 0.42, type: 'square', vol: 0.30, when: 0.55 });
+      blip({ freq: 349, endFreq: 300, dur: 0.42, type: 'square', vol: 0.22, when: 0.55 });
+      noise(0.5, 0.12, 2200, 'highpass');
+    },
     oil() {
       noise(0.3, 0.35, 350);
       blip({ freq: 140, endFreq: 38, dur: 0.3, type: 'triangle', vol: 0.3 });

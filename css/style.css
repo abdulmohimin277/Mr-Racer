@@ -688,7 +688,8 @@ body.touch .hud-hints { display: none; }
   bottom: max(2.5%, env(safe-area-inset-bottom));
 }
 #touch-controls .touch-btns,
-#touch-controls .touch-pedals {
+#touch-controls .touch-pedals,
+#touch-controls .touch-extra {
   display: flex;
   gap: clamp(6px, 1.6vmin, 14px);
   pointer-events: none;
@@ -742,6 +743,22 @@ body.touch .hud-hints { display: none; }
   border-color: rgba(64, 178, 255, 0.7);
 }
 .tbtn-fire:active { background: rgba(64, 178, 255, 0.42); }
+.tbtn-horn {
+  border-color: rgba(120, 224, 255, 0.6);
+  background: rgba(10, 22, 45, 0.6);
+  width: clamp(46px, 10vmin, 70px);
+  height: clamp(46px, 10vmin, 70px);
+}
+.tbtn-horn:active { background: rgba(120, 224, 255, 0.35); }
+.tbtn-light,
+.tbtn-wiper {
+  width: clamp(44px, 9.5vmin, 66px);
+  height: clamp(44px, 9.5vmin, 66px);
+  font-size: clamp(8px, 2.4vmin, 12px);
+  letter-spacing: 0.5px;
+}
+.tbtn-light:active,
+.tbtn-wiper:active { background: rgba(64, 178, 255, 0.3); }
 .tbtn.on {
   background: rgba(120, 224, 255, 0.3);
   border-color: rgba(120, 224, 255, 0.9);

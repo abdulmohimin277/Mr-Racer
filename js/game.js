@@ -64,6 +64,14 @@ const Game = (() => {
   let oilT = 0, driftTime = 0, driftSmokeT = 0, driftScoreClock = 0;
   let driftPrev = false, driftBoost = 0;   // drift-release boost charge
 
+  // car extras: headlights, wipers, rain, indicators
+  let lightsOn = true, wipersOn = false, rainOn = false;
+  let hlLightL = null, hlLightR = null, hlConeL = null, hlConeR = null;
+  let rainDrops = null, rainPos = null, rainCount = 0;
+  let blinkerT = 0, blinkL = [], blinkR = [];
+  let dashIndL = null, dashIndR = null;
+  let wiperL = null, wiperR = null, wiperPhase = 0;
+
   // cockpit (in-car) view
   let camMode = 'chase';                  // chase | cockpit
   let cockpit = null, cockpitWheel = null, cockpitNeedlePivot = null;
@@ -203,13 +211,15 @@ const Game = (() => {
     const r = Math.round(fR + (nR - fR) * nightMix);
     const g = Math.round(fG + (nG - fG) * nightMix);
     const b = Math.round(fB + (nB - fB) * nightMix);
-    scene.fog = new THREE.Fog((r << 16) | (g << 8) | b, 120 - 70 * nightMix, 420 - 170 * nightMix);
+    const rainMix = rainOn ? 1 : 0;
+    scene.fog = new THREE.Fog((r << 16) | (g << 8) | b, 120 - 70 * nightMix - 55 * rainMix, 420 - 170 * nightMix - 190 * rainMix);
 
     // lights
     if (sunLight) {
-      sunLight.intensity = 0.18 + dayness * 1.7;
-      hemiLight.intensity = 0.34 + dayness * 0.6;
-      fillLight.intensity = 0.1 + dayness * 0.34;
+      const dim = 0.62 + 0.38 * (1 - rainMix);
+      sunLight.intensity = (0.18 + dayness * 1.7) * dim;
+      hemiLight.intensity = (0.34 + dayness * 0.6) * dim;
+      fillLight.intensity = (0.1 + dayness * 0.34) * dim;
     }
 
     // windows glow at night, fade by day
@@ -250,6 +260,112 @@ const Game = (() => {
     neonLight = new THREE.PointLight(0x2fa8ff, 22, 14, 2);
     neonLight.position.set(0, 1.4, PLAYER_Z);
     scene.add(neonLight);
+
+    // headlights — two warm-white point lights + visible beam cones
+    hlLightL = new THREE.PointLight(0xdff2ff, 0, 20, 2);
+    hlLightR = new THREE.PointLight(0xdff2ff, 0, 20, 2);
+    scene.add(hlLightL);
+    scene.add(hlLightR);
+    const coneMat = new THREE.MeshBasicMaterial({
+      color: 0xbcdcff, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    hlConeL = new THREE.Mesh(new THREE.ConeGeometry(1.0, 8, 14, 1, true), coneMat.clone());
+    hlConeL.rotation.x = -Math.PI / 2;          // point the beam forward (-z)
+    hlConeL.position.set(-0.62, 0.75, PLAYER_Z - 1);
+    scene.add(hlConeL);
+    hlConeR = new THREE.Mesh(new THREE.ConeGeometry(1.0, 8, 14, 1, true), coneMat.clone());
+    hlConeR.rotation.x = -Math.PI / 2;
+    hlConeR.position.set(0.62, 0.75, PLAYER_Z - 1);
+    scene.add(hlConeR);
+  }
+
+  /* ---------------- rain (particle streaks) ---------------- */
+  function makeRain() {
+    rainCount = IS_MOBILE ? 240 : 480;
+    rainPos = new Float32Array(rainCount * 3);
+    for (let i = 0; i < rainPos.length; i += 3) {
+      rainPos[i] = (Math.random() * 2 - 1) * 26;
+      rainPos[i + 1] = Math.random() * 26 - 4;
+      rainPos[i + 2] = -Math.random() * 130;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+    rainDrops = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0xbfd9ff, size: IS_MOBILE ? 0.16 : 0.2,
+      transparent: true, opacity: 0.8, depthWrite: false,
+    }));
+    rainDrops.frustumCulled = false;
+    rainDrops.visible = false;
+    scene.add(rainDrops);
+  }
+
+  function updateRain(dt) {
+    if (!rainDrops) return;
+    if (!rainOn) {
+      rainDrops.visible = false;
+      return;
+    }
+    rainDrops.visible = true;
+    const fall = (34 + speed * 1.1) * dt;
+    const arr = rainPos;
+    const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
+    for (let i = 0; i < arr.length; i += 3) {
+      arr[i] += (Math.random() - 0.5) * dt * 7;
+      arr[i + 1] -= fall;
+      arr[i + 2] += (Math.random() - 0.5) * dt * 2;
+      if (arr[i + 1] < cy - 15) {
+        arr[i] = cx + (Math.random() * 2 - 1) * 17;
+        arr[i + 1] = cy + 15;
+        arr[i + 2] = cz - Math.random() * 100;
+      }
+    }
+    rainDrops.geometry.attributes.position.needsUpdate = true;
+  }
+
+  /* headlights, indicators + wipers react every frame */
+  function updateCarExtras(dt) {
+    // headlight beams follow the car and glow brighter at night / in rain
+    if (hlLightL) {
+      const target = lightsOn ? (2.0 + 1.4 * nightMixG + (rainOn ? 1.0 : 0)) : 0;
+      hlLightL.intensity += (target - hlLightL.intensity) * Math.min(1, dt * 6);
+      hlLightR.intensity += (target - hlLightR.intensity) * Math.min(1, dt * 6);
+      const px = player.x;
+      hlLightL.position.x = px - 0.62;
+      hlLightR.position.x = px + 0.62;
+      hlConeL.position.x = px - 0.62;
+      hlConeR.position.x = px + 0.62;
+      const op = lightsOn ? (rainOn ? 0.22 : 0.14) : 0;
+      hlConeL.material.opacity = op;
+      hlConeR.material.opacity = op;
+    }
+    // turn signals: blink while steering, amber glow on the corners + dash arrows
+    blinkerT += dt;
+    const bln = (blinkerT % 0.8) < 0.4;
+    const showL = Boolean(input.left), showR = Boolean(input.right);
+    const blinkPow = bln ? 2.4 : 0.06;
+    for (const m of blinkL) m.emissiveIntensity = showL ? blinkPow : 0;
+    for (const m of blinkR) m.emissiveIntensity = showR ? blinkPow : 0;
+    if (dashIndL) {
+      dashIndL.material.opacity = showL ? (bln ? 1 : 0.2) : 0.14;
+      dashIndL.material.color.setHex(bln && showL ? 0xffd23d : 0x3fb8ff);
+      dashIndR.material.opacity = showR ? (bln ? 1 : 0.2) : 0.14;
+      dashIndR.material.color.setHex(bln && showR ? 0xffd23d : 0x3fb8ff);
+    }
+    // wipers sweep across the windshield while switched on
+    if (wiperL) {
+      if (wipersOn) {
+        wiperPhase += dt;
+        let t = (wiperPhase % 1.4) / 0.75;
+        if (t > 1) t = 1;
+        const angle = Math.sin(t * Math.PI) * 0.95;
+        wiperR.rotation.z = -angle;
+        wiperL.rotation.z = angle;
+      } else {
+        wiperR.rotation.z = 0;
+        wiperL.rotation.z = 0;
+      }
+    }
   }
 
   /* ---------------- road ---------------- */
@@ -816,6 +932,21 @@ const Game = (() => {
       b.position.set(bx, 0.62, 2.62);
       g.add(b);
     }
+    // amber indicator blinkers on all four corners (turn signals)
+    blinkL = []; blinkR = [];
+    const mkInd = (x, z, arr) => {
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(0.24, 0.12, 0.07),
+        new THREE.MeshStandardMaterial({ color: 0x1a0f00, emissive: 0xffa012, emissiveIntensity: 0 })
+      );
+      m.position.set(x, 0.6, z);
+      g.add(m);
+      arr.push(m.material);
+    };
+    mkInd(-0.56, 2.3, blinkL);      // front-left
+    mkInd(0.56, 2.3, blinkR);       // front-right
+    mkInd(-0.5, -2.72, blinkL);     // rear-left
+    mkInd(0.5, -2.72, blinkR);      // rear-right
     g.position.set(0, 0, PLAYER_Z);
     g.rotation.y = Math.PI;
     g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -955,6 +1086,48 @@ const Game = (() => {
     needlePivot.add(cap);
     c.add(needlePivot);
     cockpitNeedlePivot = needlePivot;
+
+    // turn-signal indicator arrows on the dash (left / right of the gauge)
+    const indTex = canvasTex(64, 64, (ctx, w, h) => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(w * 0.16, h * 0.5);
+      ctx.lineTo(w * 0.86, h * 0.16);
+      ctx.lineTo(w * 0.86, h * 0.84);
+      ctx.closePath();
+      ctx.fill();
+    });
+    const indMat = new THREE.MeshBasicMaterial({ map: indTex, transparent: true, opacity: 0.16, depthWrite: false });
+    dashIndL = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), indMat);
+    dashIndL.position.set(-0.34, -0.05, -1.52);
+    c.add(dashIndL);
+    dashIndR = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), indMat.clone());
+    dashIndR.scale.x = -1;
+    dashIndR.position.set(0.62, -0.05, -1.52);
+    c.add(dashIndR);
+
+    // windscreen wipers — two arms sweeping across the windshield
+    const makeWiperArm = (side) => {
+      const a = new THREE.Group();
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 1.15), trimMat);
+      arm.position.y = 0.55;                      // pivot at the bottom
+      a.add(arm);
+      const blade = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 0.06, 0.02),
+        new THREE.MeshBasicMaterial({ color: 0x0c0c12 })
+      );
+      blade.position.y = 0.92;
+      a.add(blade);
+      a.position.set(side, 0.24, -1.44);          // in front of the windshield pillars
+      return a;
+    };
+    wiperR = makeWiperArm(0.66);
+    wiperL = makeWiperArm(-0.66);
+    c.add(wiperR);
+    c.add(wiperL);
+    wiperR.rotation.z = 0;
+    wiperL.rotation.z = 0;
 
     // rear-view mirror (top centre of the windshield) — a live "fake" mirror canvas
     mirrorCanvas = document.createElement('canvas');
@@ -1532,6 +1705,11 @@ const Game = (() => {
         s.mesh.position.x = LANES[(Math.random() * 3) | 0] + (Math.random() - 0.5) * 2.6;
       }
     }
+
+    /* --- car extras (headlights, indicators, wipers) + rain --- */
+    updateCarExtras(dt);
+    updateRain(dt);
+
     /* --- camera --- */
     const k = 1 - Math.exp(-dt * 5.2);
     if (camMode === 'cockpit') {
@@ -1663,6 +1841,7 @@ const Game = (() => {
     Bolts.init(scene);
     Particles.init(scene);
     Smoke.init(scene);
+    makeRain();
 
     for (let i = 0; i < 36; i++) coinPool.push(makeCoinMesh());
     for (let i = 0; i < 5; i++) ammoPool.push(makeAmmoMesh());
@@ -1694,6 +1873,12 @@ const Game = (() => {
 
   function setInput(obj) { input = obj; }
   function refillAmmo() { ammo = MAX_AMMO; }
+  function setLights(on) { lightsOn = !!on; }
+  function setWipers(on) { wipersOn = !!on; }
+  function setRain(on) {
+    rainOn = !!on;
+    if (rainDrops) rainDrops.visible = rainOn;
+  }
   function setTime(setting) {
     if (setting === 'day' || setting === 'night' || setting === 'cycle') {
       timeSetting = setting;
@@ -1713,6 +1898,9 @@ const Game = (() => {
     setCar,
     setPaint,
     setTime,
+    setLights,
+    setWipers,
+    setRain,
     toggleCam,
     refillAmmo,
     CAR_OPTIONS,

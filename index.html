@@ -122,6 +122,9 @@
           <div class="key-row"><span class="key">R</span><b>Quick restart</b></div>
           <div class="key-row"><span class="key">M</span><b>Mute sound</b></div>
           <div class="key-row"><span class="key">N</span><b>Refill blaster charge</b></div>
+          <div class="key-row"><span class="key">H</span><b>Horn</b></div>
+          <div class="key-row"><span class="key">L</span><b>Headlights</b></div>
+          <div class="key-row"><span class="key">V</span><b>Wipers</b></div>
         </div>
         <p class="option-note">On phones &amp; tablets use the on-screen buttons: ◀ ▶ steer · GAS · BRAKE · DRIFT · FIRE</p>
       </div>
@@ -150,6 +153,16 @@
             <button data-time="day" class="seg-btn active">DAY</button>
             <button data-time="cycle" class="seg-btn">CYCLE</button>
             <button data-time="night" class="seg-btn">NIGHT</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-row">
+        <div class="diff-select" style="flex:1">
+          <span class="row-label">WEATHER</span>
+          <div class="seg" id="weather-seg">
+            <button data-weather="clear" class="seg-btn active">CLEAR</button>
+            <button data-weather="rain" class="seg-btn">RAIN</button>
           </div>
         </div>
       </div>
@@ -273,6 +286,7 @@
   <!-- Touch controls (shown automatically on touch devices) -->
   <div id="touch-controls" class="hidden">
     <div class="touch-left">
+      <button class="tbtn tbtn-horn" data-touch="horn" aria-label="Horn">HORN</button>
       <button class="tbtn tbtn-drift" data-touch="drift" aria-label="Drift">DRIFT</button>
       <div class="touch-btns">
         <button class="tbtn" data-touch="left" aria-label="Left">◀</button>
@@ -280,11 +294,15 @@
       </div>
     </div>
     <div class="touch-right">
+      <div class="touch-extra">
+        <button class="tbtn tbtn-light" id="tbtn-light" data-touch="lights" aria-label="Lights">LIGHTS</button>
+        <button class="tbtn tbtn-wiper" id="tbtn-wiper" data-touch="wipers" aria-label="Wipers">WIPERS</button>
+      </div>
+      <button class="tbtn tbtn-fire" data-touch="fire" aria-label="Shoot">FIRE</button>
       <div class="touch-pedals">
         <button class="tbtn tbtn-brake" data-touch="brake" aria-label="Brake">BRAKE</button>
         <button class="tbtn tbtn-gaspedal" data-touch="gas" aria-label="Accelerate">GAS</button>
       </div>
-      <button class="tbtn tbtn-fire" data-touch="fire" aria-label="Shoot">FIRE</button>
     </div>
   </div>
 

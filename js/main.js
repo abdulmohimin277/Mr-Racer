@@ -12,11 +12,19 @@
   };
 
   // ---------- shared input state ----------
-  const input = { left: false, right: false, throttle: false, fire: false, drift: false };
+  const input = { left: false, right: false, throttle: false, fire: false, drift: false, brake: false, horn: false };
   Game.setInput(input);
 
   let currentDiff = 'medium';
   let touchMode = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  let lightsOn = true;     // headlights (L key / LIGHTS button)
+  let wipersOn = false;    // wipers (V key / WIPERS button)
+
+  function syncExtraBtns() {
+    const lb = $('tbtn-light'), wb = $('tbtn-wiper');
+    if (lb) lb.classList.toggle('on', lightsOn);
+    if (wb) wb.classList.toggle('on', wipersOn);
+  }
 
   /* ================= THREE.js boot ================= */
   function boot() {
@@ -157,6 +165,19 @@
       });
     });
     restoreTime();
+
+    // weather selector (CLEAR / RAIN)
+    document.querySelectorAll('#weather-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#weather-seg .seg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        Game.setRain(btn.dataset.weather === 'rain');
+        try { localStorage.setItem('neonrush_weather', btn.dataset.weather); } catch (e) {}
+        AudioFX.sfx.ui();
+      });
+    });
+    restoreWeather();
+    syncExtraBtns();
   }
 
   function restoreCar() {
@@ -183,6 +204,15 @@
     Game.setTime(t);
     document.querySelectorAll('#time-seg .seg-btn').forEach((b) => {
       b.classList.toggle('active', b.dataset.time === t);
+    });
+  }
+
+  function restoreWeather() {
+    let w = 'clear';
+    try { w = localStorage.getItem('neonrush_weather') || 'clear'; } catch (e) {}
+    Game.setRain(w === 'rain');
+    document.querySelectorAll('#weather-seg .seg-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.weather === w);
     });
   }
 
@@ -235,6 +265,23 @@
         case 'KeyN':
           Game.refillAmmo();
           break;
+        case 'KeyH':
+          if (!e.repeat) AudioFX.sfx.horn();
+          break;
+        case 'KeyL':
+          if (!e.repeat) {
+            lightsOn = !lightsOn;
+            Game.setLights(lightsOn);
+            syncExtraBtns();
+          }
+          break;
+        case 'KeyV':
+          if (!e.repeat) {
+            wipersOn = !wipersOn;
+            Game.setWipers(wipersOn);
+            syncExtraBtns();
+          }
+          break;
         case 'KeyC':
           Game.toggleCam();
           break;
@@ -260,7 +307,7 @@
     if (document.body) document.body.classList.add('touch');
 
     const bind = (el, key) => {
-      const press = (e) => { e.preventDefault(); input[key] = true; AudioFX.ensure(); };
+      const press = (e) => { e.preventDefault(); if (key === 'horn' && !input.horn) AudioFX.sfx.horn(); input[key] = true; AudioFX.ensure(); };
       const release = (e) => { e.preventDefault(); input[key] = false; };
       el.addEventListener('pointerdown', press);
       el.addEventListener('pointerup', release);
@@ -269,7 +316,8 @@
       el.addEventListener('contextmenu', (e) => e.preventDefault());
     };
     document.querySelectorAll('.tbtn').forEach((b) => {
-      if (b.dataset.touch === 'gas') {
+      const t = b.dataset.touch;
+      if (t === 'gas') {
         // cruise toggle — tap once to accelerate, tap again to release
         b.addEventListener('click', (e) => {
           e.preventDefault();
@@ -277,8 +325,26 @@
           b.classList.toggle('on', input.throttle);
           AudioFX.ensure();
         });
+      } else if (t === 'lights') {
+        // headlight toggle
+        b.addEventListener('click', (e) => {
+          e.preventDefault();
+          lightsOn = !lightsOn;
+          Game.setLights(lightsOn);
+          b.classList.toggle('on', lightsOn);
+          AudioFX.ensure();
+        });
+      } else if (t === 'wipers') {
+        // wiper toggle
+        b.addEventListener('click', (e) => {
+          e.preventDefault();
+          wipersOn = !wipersOn;
+          Game.setWipers(wipersOn);
+          b.classList.toggle('on', wipersOn);
+          AudioFX.ensure();
+        });
       } else {
-        bind(b, b.dataset.touch);
+        bind(b, t);
       }
     });
 

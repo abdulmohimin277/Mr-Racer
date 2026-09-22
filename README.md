@@ -5,8 +5,15 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 ## ✅ Features
 
 - **Cockpit view** — press `C` (or tap the **VIEW** button on phones) to sit inside the car: dashboard, blue
-  speedometer with a live needle, a steering wheel that turns with your inputs, A-pillars, roof bar
-  and a **working rear-view mirror** showing the traffic behind you
+  speedometer with a live needle, a steering wheel that turns with your inputs, A-pillars, roof bar,
+  a **working rear-view mirror** showing the traffic behind you, **turn-signal arrows** on the dash
+  and **working windscreen wipers** that sweep when switched on
+- **Horn** — press `H` (or tap **HORN** on phones) to blast a classic dual-tone horn
+- **Headlights** — warm-white beams + visible light cones in front of the car (press `L` / **LIGHTS** button);
+  they glow brightest at night and cut through the rain
+- **Turn signals** — the 4 corner blinkers (front & rear) and the dash arrows blink amber while you steer
+- **Rain weather** — pick **RAIN** in OPTIONS (or the LIVE in-game weather): falling rain streaks, tighter fog,
+  darker sky and washed-out sun; wipers help you see from inside the cockpit
 - **Start countdown** — every race kicks off with a 3·2·1·GO grid-style countdown while the engine revs
 - **Combo multiplier** — near-misses and blaster kills build a COMBO meter; each chain multiplies your
   score (up to ×4). Keep it alive by staying aggressive!
@@ -51,6 +58,9 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 | `M`               | Mute sound                    |
 | `N`               | Refill blaster charge         |
 | `C`               | Cockpit view (in-car dashboard + steering wheel) |
+| `H`               | Horn                          |
+| `L`               | Headlights on / off           |
+| `V`               | Wipers on / off               |
 
 ## 📱 Mobile / touch
 
@@ -61,11 +71,15 @@ The game is fully playable on phones & tablets — on-screen controls appear aut
 - **BRAKE** — hold to slow down
 - **DRIFT** — hold while steering; release for a speed-boost pop
 - **FIRE** — fire the blasters (hold)
+- **HORN** — tap to honk
+- **LIGHTS / WIPERS** — tap to toggle headlights and wipers (glow when on)
 - **PAUSE** — pause button in the HUD top row
 - **VIEW** — toggle the in-car cockpit view (dashboard + steering wheel) on the HUD top row
 
 Buttons are text-labelled (no emoji icons), scale with the screen size, and are pinned to the bottom
-corners respecting notch/home-bar safe areas — small phones and tablets both get thumb-friendly controls.
+corners in two thumb clusters (HORN/DRIFT/arrows on the left, LIGHTS/WIPERS/FIRE/pedals on the right)
+respecting notch/home-bar safe areas — buttons never overlap, and small phones and tablets both get
+thumb-friendly controls.
 
 On touch devices the game automatically lowers the render quality (shadows, pixel ratio,
 antialiasing, scenery density, traffic shadows) and widens the camera FOV for portrait screens so you
