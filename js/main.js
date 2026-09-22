@@ -80,8 +80,14 @@
   function wireButtons() {
     $('btn-play').addEventListener('click', () => startGame(currentDiff));
 
+    $('btn-options').addEventListener('click', () => showScreen('screen-options'));
+    $('btn-options-back').addEventListener('click', () => showScreen('screen-menu'));
     $('btn-howto').addEventListener('click', () => showScreen('screen-howto'));
     $('btn-howto-back').addEventListener('click', () => showScreen('screen-menu'));
+    $('btn-garage').addEventListener('click', () => showScreen('screen-garage'));
+    $('btn-garage-back').addEventListener('click', () => showScreen('screen-menu'));
+    $('btn-about').addEventListener('click', () => showScreen('screen-about'));
+    $('btn-about-back').addEventListener('click', () => showScreen('screen-menu'));
 
     $('btn-resume').addEventListener('click', () => {
       showScreenHide();

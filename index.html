@@ -69,68 +69,12 @@
         <p class="game-sub">3D HIGHWAY RACER</p>
       </div>
 
-      <div class="menu-controls">
-        <button id="btn-play" class="btn btn-primary">▶&nbsp; START RACE</button>
-
-        <div class="menu-row">
-          <div class="diff-select">
-            <span class="row-label">DIFFICULTY</span>
-            <div class="seg" id="diff-seg">
-              <button data-diff="easy" class="seg-btn active">EASY</button>
-              <button data-diff="medium" class="seg-btn">MEDIUM</button>
-              <button data-diff="hard" class="seg-btn">HARD</button>
-            </div>
-          </div>
-          <div class="sound-select">
-            <span class="row-label">SOUND</span>
-            <div class="seg" id="sound-seg">
-              <button id="btn-sound" class="seg-btn active">SOUND ON</button>
-            </div>
-          </div>
-        </div>
-
-        <button id="btn-howto" class="btn btn-ghost">ℹ&nbsp; HOW TO PLAY</button>
-
-        <div class="menu-row car-row">
-          <div class="diff-select" style="flex:1">
-            <span class="row-label">YOUR RIDE</span>
-            <div class="seg seg-cars" id="car-seg">
-              <button data-car="ember" class="seg-btn car-btn" title="EMBER GT"><span class="swatch" style="background:#ffc219"></span>EMBER</button>
-              <button data-car="blaze" class="seg-btn car-btn" title="BLAZE X"><span class="swatch" style="background:#ff3b10"></span>BLAZE</button>
-              <button data-car="shadow" class="seg-btn car-btn" title="NIGHT FANG"><span class="swatch" style="background:#39404f"></span>SHADOW</button>
-              <button data-car="gold" class="seg-btn car-btn" title="GOLD RUSH"><span class="swatch" style="background:#e8c05a"></span>GOLD</button>
-              <button data-car="comet" class="seg-btn car-btn" title="COMET RS"><span class="swatch" style="background:#ff5e3d"></span>COMET</button>
-              <button data-car="onyx" class="seg-btn car-btn" title="ONYX GT"><span class="swatch" style="background:#2a2e37"></span>ONYX</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="menu-row">
-          <div class="diff-select" style="flex:1">
-            <span class="row-label">PAINT</span>
-            <div class="seg paint-seg" id="paint-seg">
-              <button class="paint-btn seg-btn" data-paint="" title="Factory paint"><span class="swatch" style="background:#ffc219"></span>STOCK</button>
-              <button class="paint-btn seg-btn" data-paint="ff3b10" title="Hot red"><span class="swatch" style="background:#ff3b10"></span></button>
-              <button class="paint-btn seg-btn" data-paint="ff7a1a" title="Pumpkin"><span class="swatch" style="background:#ff7a1a"></span></button>
-              <button class="paint-btn seg-btn" data-paint="ffd23d" title="Gold"><span class="swatch" style="background:#ffd23d"></span></button>
-              <button class="paint-btn seg-btn" data-paint="4dd6ff" title="Sky blue"><span class="swatch" style="background:#4dd6ff"></span></button>
-              <button class="paint-btn seg-btn" data-paint="8ef06e" title="Neon green"><span class="swatch" style="background:#8ef06e"></span></button>
-              <button class="paint-btn seg-btn" data-paint="f5f2ea" title="Pearl white"><span class="swatch" style="background:#f5f2ea"></span></button>
-              <button class="paint-btn seg-btn" data-paint="14161b" title="Midnight black"><span class="swatch" style="background:#14161b"></span></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="menu-row">
-          <div class="diff-select" style="flex:1">
-            <span class="row-label">TIME OF DAY</span>
-            <div class="seg" id="time-seg">
-              <button data-time="day" class="seg-btn active">DAY</button>
-              <button data-time="cycle" class="seg-btn">🔄 CYCLE</button>
-              <button data-time="night" class="seg-btn">🌙 NIGHT</button>
-            </div>
-          </div>
-        </div>
+      <div class="menu-options">
+        <button id="btn-play" class="btn btn-primary">▶&nbsp; PLAY</button>
+        <button id="btn-options" class="btn btn-ghost">OPTIONS</button>
+        <button id="btn-howto" class="btn btn-ghost">HOW TO PLAY</button>
+        <button id="btn-garage" class="btn btn-ghost">GARAGE</button>
+        <button id="btn-about" class="btn btn-ghost">ABOUT</button>
       </div>
 
       <div class="menu-foot">
@@ -153,10 +97,141 @@
         <div class="howto-item"><span class="key">P</span><span class="key">ESC</span><div><b>Pause</b><p>R = quick restart, M = mute, N = refill blaster</p></div></div>
         <div class="howto-item"><span class="coin-icon">⛁</span><div><b>Coins</b><p>Collect golden coins for bonus points.</p></div></div>
         <div class="howto-item"><span class="health-icon">♥</span><div><b>Lives</b><p>You have 3 lives. Collisions cost one.</p></div></div>
-        <div class="howto-item"><span class="coin-icon">🔥</span><div><b>Combos</b><p>Near-misses &amp; blaster kills build a COMBO multiplier up to ×4 — keep it alive for big scores!</p></div></div>
-        <div class="howto-item"><span class="coin-icon">👆</span><div><b>Touch</b><p>On phones/tablets use the on-screen buttons. Tap ▲ once to cruise, tap again to release.</p></div></div>
+        <div class="howto-item"><span class="coin-icon">◆</span><div><b>Combos</b><p>Near-misses &amp; blaster kills build a COMBO multiplier up to ×4 — keep it alive for big scores!</p></div></div>
+        <div class="howto-item"><span class="coin-icon">TAP</span><div><b>Touch</b><p>On phones/tablets use the on-screen buttons. Tap GAS once to cruise, tap again to release.</p></div></div>
       </div>
       <button id="btn-howto-back" class="btn btn-ghost">←&nbsp; BACK</button>
+    </div>
+  </div>
+
+  <!-- OPTIONS -->
+  <div id="screen-options" class="screen hidden">
+    <div class="menu-card">
+      <h2 class="screen-title">OPTIONS</h2>
+
+      <div class="option-block">
+        <span class="row-label">CONTROLS</span>
+        <div class="keys-grid">
+          <div class="key-row"><span class="key">←</span><span class="key">→</span><b>Steer</b><em>A / D</em></div>
+          <div class="key-row"><span class="key">↑</span><span class="key">W</span><b>Accelerate</b></div>
+          <div class="key-row"><span class="key">↓</span><span class="key">S</span><b>Brake</b></div>
+          <div class="key-row"><span class="key">SPACE</span><b>Blaster</b></div>
+          <div class="key-row"><span class="key">X</span><span class="key">SHIFT</span><b>Drift</b></div>
+          <div class="key-row"><span class="key">C</span><b>Cockpit view</b></div>
+          <div class="key-row"><span class="key">P</span><span class="key">ESC</span><b>Pause</b></div>
+          <div class="key-row"><span class="key">R</span><b>Quick restart</b></div>
+          <div class="key-row"><span class="key">M</span><b>Mute sound</b></div>
+          <div class="key-row"><span class="key">N</span><b>Refill blaster charge</b></div>
+        </div>
+        <p class="option-note">On phones &amp; tablets use the on-screen buttons: ◀ ▶ steer · GAS · BRAKE · DRIFT · FIRE</p>
+      </div>
+
+      <div class="menu-row">
+        <div class="diff-select">
+          <span class="row-label">DIFFICULTY</span>
+          <div class="seg" id="diff-seg">
+            <button data-diff="easy" class="seg-btn active">EASY</button>
+            <button data-diff="medium" class="seg-btn">MEDIUM</button>
+            <button data-diff="hard" class="seg-btn">HARD</button>
+          </div>
+        </div>
+        <div class="sound-select">
+          <span class="row-label">SOUND / MUSIC</span>
+          <div class="seg" id="sound-seg">
+            <button id="btn-sound" class="seg-btn active">SOUND ON</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-row">
+        <div class="diff-select" style="flex:1">
+          <span class="row-label">TIME OF DAY</span>
+          <div class="seg" id="time-seg">
+            <button data-time="day" class="seg-btn active">DAY</button>
+            <button data-time="cycle" class="seg-btn">CYCLE</button>
+            <button data-time="night" class="seg-btn">NIGHT</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-options-back" class="btn btn-ghost">←&nbsp; BACK</button>
+    </div>
+  </div>
+
+  <!-- GARAGE -->
+  <div id="screen-garage" class="screen hidden">
+    <div class="menu-card">
+      <h2 class="screen-title">GARAGE</h2>
+      <p class="option-note">Pick your ride &amp; paint. Your choice is saved automatically.</p>
+
+      <div class="menu-row car-row">
+        <div class="diff-select" style="flex:1">
+          <span class="row-label">YOUR RIDE</span>
+          <div class="seg seg-cars" id="car-seg">
+            <button data-car="ember" class="seg-btn car-btn" title="EMBER GT"><span class="swatch" style="background:#ffc219"></span>EMBER</button>
+            <button data-car="blaze" class="seg-btn car-btn" title="BLAZE X"><span class="swatch" style="background:#ff3b10"></span>BLAZE</button>
+            <button data-car="shadow" class="seg-btn car-btn" title="NIGHT FANG"><span class="swatch" style="background:#39404f"></span>SHADOW</button>
+            <button data-car="gold" class="seg-btn car-btn" title="GOLD RUSH"><span class="swatch" style="background:#e8c05a"></span>GOLD</button>
+            <button data-car="comet" class="seg-btn car-btn" title="COMET RS"><span class="swatch" style="background:#ff5e3d"></span>COMET</button>
+            <button data-car="onyx" class="seg-btn car-btn" title="ONYX GT"><span class="swatch" style="background:#2a2e37"></span>ONYX</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-row">
+        <div class="diff-select" style="flex:1">
+          <span class="row-label">PAINT</span>
+          <div class="seg paint-seg" id="paint-seg">
+            <button class="paint-btn seg-btn" data-paint="" title="Factory paint"><span class="swatch" style="background:#ffc219"></span>STOCK</button>
+            <button class="paint-btn seg-btn" data-paint="ff3b10" title="Hot red"><span class="swatch" style="background:#ff3b10"></span></button>
+            <button class="paint-btn seg-btn" data-paint="ff7a1a" title="Pumpkin"><span class="swatch" style="background:#ff7a1a"></span></button>
+            <button class="paint-btn seg-btn" data-paint="ffd23d" title="Gold"><span class="swatch" style="background:#ffd23d"></span></button>
+            <button class="paint-btn seg-btn" data-paint="4dd6ff" title="Sky blue"><span class="swatch" style="background:#4dd6ff"></span></button>
+            <button class="paint-btn seg-btn" data-paint="8ef06e" title="Neon green"><span class="swatch" style="background:#8ef06e"></span></button>
+            <button class="paint-btn seg-btn" data-paint="f5f2ea" title="Pearl white"><span class="swatch" style="background:#f5f2ea"></span></button>
+            <button class="paint-btn seg-btn" data-paint="14161b" title="Midnight black"><span class="swatch" style="background:#14161b"></span></button>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-garage-back" class="btn btn-ghost">←&nbsp; BACK</button>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="screen-about" class="screen hidden">
+    <div class="menu-card">
+      <div class="logo">
+        <h1 class="game-title about-title">NEON<span class="title-accent">RUSH</span></h1>
+        <p class="game-sub">3D HIGHWAY RACER</p>
+      </div>
+
+      <p class="about-desc">A fully 3D highway racing game built with JavaScript &amp; Three.js — dodge traffic,
+        drift for boosts, grab coins, and blast obstacles with your twin nose blasters.</p>
+
+      <div class="about-credits">
+        <span class="row-label">DESIGNED BY STUDENTS</span>
+        <h3 class="credits-name">Abdul-Mohimin</h3>
+        <h3 class="credits-name">Sahal Ashfaq</h3>
+      </div>
+
+      <div class="about-features">
+        <span class="row-label">WHAT THE GAME CAN DO</span>
+        <ul class="feat-list">
+          <li><b>3D racing</b> — full 3D highway on a single flat road</li>
+          <li><b>Garage</b> — 6 racing cars with 8 paint colours</li>
+          <li><b>Drift &amp; boost</b> — slide corners, release a speed-boost pop</li>
+          <li><b>Day / night</b> — DAY, NIGHT or a full CYCLE lighting</li>
+          <li><b>Blasters</b> — shoot traffic &amp; barriers (hits refill ammo)</li>
+          <li><b>Combos</b> — near-misses &amp; kills build a ×4 multiplier</li>
+          <li><b>3 difficulties</b> — Easy, Medium, Hard with dense traffic</li>
+          <li><b>Camera</b> — chase or cockpit view, always fixed ahead</li>
+          <li><b>Keyboard &amp; touch</b> — plays with keys or on-screen buttons</li>
+          <li><b>Best score</b> — saved on your device</li>
+        </ul>
+      </div>
+
+      <button id="btn-about-back" class="btn btn-ghost">←&nbsp; BACK</button>
     </div>
   </div>
 
@@ -166,7 +241,7 @@
       <h2 class="screen-title">GAME PAUSED</h2>
       <button id="btn-resume" class="btn btn-primary">▶&nbsp; RESUME</button>
       <button id="btn-restart" class="btn btn-ghost">↻&nbsp; RESTART</button>
-      <button id="btn-menu" class="btn btn-ghost">🏠&nbsp; MAIN MENU</button>
+      <button id="btn-menu" class="btn btn-ghost">MAIN MENU</button>
     </div>
   </div>
 
@@ -182,14 +257,14 @@
       </div>
       <div class="new-best hidden" id="new-best-badge">★ NEW BEST SCORE!</div>
       <button id="btn-retry" class="btn btn-primary">↻&nbsp; RACE AGAIN</button>
-      <button id="btn-gomenu" class="btn btn-ghost">🏠&nbsp; MAIN MENU</button>
+      <button id="btn-gomenu" class="btn btn-ghost">MAIN MENU</button>
     </div>
   </div>
 
   <!-- Loading -->
   <div id="screen-loading" class="screen">
     <div class="loading-inner">
-      <div class="loading-icon">🚗</div>
+      <div class="loading-icon">NEON RUSH</div>
       <div class="loader-bar"><div class="loader-fill"></div></div>
       <p>SHIFTING GEARS…</p>
     </div>

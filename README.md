@@ -4,7 +4,7 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 
 ## ✅ Features
 
-- **Cockpit view** — press `C` (or tap 📷 VIEW on phones) to sit inside the car: dashboard, blue
+- **Cockpit view** — press `C` (or tap the **VIEW** button on phones) to sit inside the car: dashboard, blue
   speedometer with a live needle, a steering wheel that turns with your inputs, A-pillars, roof bar
   and a **working rear-view mirror** showing the traffic behind you
 - **Start countdown** — every race kicks off with a 3·2·1·GO grid-style countdown while the engine revs
@@ -28,7 +28,9 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 - **Brake pedal** — press `↓` / `S` (or hold **BRAKE** on phones) to brake hard and slow down for the turns
 - **Day / night cycle** — optional: the highway world can roll through DAY → SUNSET → NIGHT → SUNRISE on a loop (windows light up at night, neon strips burn brighter); DAY is the default theme
 - **Busy traffic** — dense traffic with **convoys** (streams of cars in one lane) and side-by-side **wall formations** on harder difficulties
-- **Main menu** — START / HOW TO PLAY / difficulty selector (Easy, Medium, Hard) / sound toggle / best score
+- **Main menu** — a clean hub with **5 options**: **PLAY**, **OPTIONS** (controls, difficulty, sound/music,
+  time of day), **HOW TO PLAY**, **GARAGE** (6 cars + 8 paints), and an **ABOUT** page that credits the makers
+  and lists everything the game can do
 - **HUD** — live score, coins, best, speedometer, gun-charge bar and 3 lives
 - **Game over & pause screens**, near-miss bonuses, crash damage vignette, floating score popups
 - **WebAudio sound** — synth engine hum, laser shots, coins, explosions, crash, and a driving music loop
@@ -83,6 +85,15 @@ Option 2 — local server (recommended):
 python -m http.server 8899
 # then open http://127.0.0.1:8899
 ```
+
+## 👨‍🎓 About
+
+**NEON RUSH** is a school project game designed and developed by students:
+
+- **Abdul-Mohimin**
+- **Sahal Ashfaq**
+
+It was built with vanilla JavaScript + Three.js (procedural 3D models, no external assets).
 
 ## 📁 Project structure
 
