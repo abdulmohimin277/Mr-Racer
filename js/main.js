@@ -112,7 +112,7 @@
     const soundBtn = $('btn-sound');
     soundBtn.addEventListener('click', () => {
       const on = AudioFX.toggle();
-      soundBtn.textContent = on ? '🔊 ON' : '🔇 OFF';
+      soundBtn.textContent = on ? 'SOUND ON' : 'SOUND OFF';
       soundBtn.classList.toggle('active', on);
     });
 
@@ -223,7 +223,7 @@
           break;
         case 'KeyM':
           const on = AudioFX.toggle();
-          $('btn-sound').textContent = on ? '🔊 ON' : '🔇 OFF';
+          $('btn-sound').textContent = on ? 'SOUND ON' : 'SOUND OFF';
           $('btn-sound').classList.toggle('active', on);
           break;
         case 'KeyN':

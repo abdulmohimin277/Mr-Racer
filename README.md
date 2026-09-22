@@ -19,12 +19,13 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
   day/night cycle (DAY → SUNSET → NIGHT → SUNRISE) or a locked **NIGHT** can still be picked from the menu
 - **Coins** — collect golden coin lines for bonus score (with sparkles & sounds)
 - **Guns** — twin nose blasters. Hold `SPACE` to fire; kills refund ammo; glowing **+AMMO** pickups refill it
-- **Drifting** — hold `X` / `SHIFT` to slide, tighten corners and earn drift points (tyre smoke + skid sound)
+- **Drifting** — hold `X` / `SHIFT` **while steering** to slide: sharper corners, drift points, tyre smoke +
+  skid sound. The longer you drift, the bigger the **DRIFT BOOST** on release (speed burst + combo + score popup)
 - **6 selectable cars + paint shop** — pick your ride (EMBER GT, BLAZE X, NIGHT FANG, GOLD RUSH, COMET RS,
   ONYX GT) and repaint it in the menu (red, orange, gold, sky blue, neon green, pearl white, midnight black); all saved
 - **Single flat highway** — one straight highway (no tunnels, no flyovers). The camera view stays
   **fixed ahead** — it never turns or swings, in chase view or in the cockpit
-- **Brake pedal** — press `↓` / `S` (or hold **▼** on phones) to brake hard and slow down for the turns
+- **Brake pedal** — press `↓` / `S` (or hold **BRAKE** on phones) to brake hard and slow down for the turns
 - **Day / night cycle** — optional: the highway world can roll through DAY → SUNSET → NIGHT → SUNRISE on a loop (windows light up at night, neon strips burn brighter); DAY is the default theme
 - **Busy traffic** — dense traffic with **convoys** (streams of cars in one lane) and side-by-side **wall formations** on harder difficulties
 - **Main menu** — START / HOW TO PLAY / difficulty selector (Easy, Medium, Hard) / sound toggle / best score
@@ -54,12 +55,15 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 The game is fully playable on phones & tablets — on-screen controls appear automatically:
 
 - **◀ ▶** — steer between lanes (hold)
-- **▲** — cruise control: tap once to accelerate, tap again to release (glows when active)
-- **▼** — brake (hold to slow down)
-- **🌀** — drift (hold)
-- **🎯** — fire the blasters (hold)
-- **⏸ PAUSE** — pause button in the HUD top row
-- **📷 VIEW** — toggle the in-car cockpit view (dashboard + steering wheel) on the HUD top row
+- **GAS** — cruise control: tap once to accelerate, tap again to release (glows when active)
+- **BRAKE** — hold to slow down
+- **DRIFT** — hold while steering; release for a speed-boost pop
+- **FIRE** — fire the blasters (hold)
+- **PAUSE** — pause button in the HUD top row
+- **VIEW** — toggle the in-car cockpit view (dashboard + steering wheel) on the HUD top row
+
+Buttons are text-labelled (no emoji icons), scale with the screen size, and are pinned to the bottom
+corners respecting notch/home-bar safe areas — small phones and tablets both get thumb-friendly controls.
 
 On touch devices the game automatically lowers the render quality (shadows, pixel ratio,
 antialiasing, scenery density, traffic shadows) and widens the camera FOV for portrait screens so you

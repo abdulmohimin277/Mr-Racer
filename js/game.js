@@ -62,6 +62,7 @@ const Game = (() => {
   let camBase = { fov: 70, y: 6.6, z: 13.5 };
   let carOpt = CAR_OPTIONS[0];
   let oilT = 0, driftTime = 0, driftSmokeT = 0, driftScoreClock = 0;
+  let driftPrev = false, driftBoost = 0;   // drift-release boost charge
 
   // cockpit (in-car) view
   let camMode = 'chase';                  // chase | cockpit
@@ -1087,6 +1088,7 @@ const Game = (() => {
     score = 0; coins = 0; kills = 0;
     lives = GAME_LIVES; invuln = 1.2; shake = 0; dyingTimer = 0;
     oilT = 0; driftTime = 0; driftSmokeT = 0; driftScoreClock = 0;
+    driftPrev = false; driftBoost = 0;
     ammo = MAX_AMMO; fireCooldown = 0;
     nextSpawn = 10; nextCoinSpawn = 4;
     laneCooldown = [0, 0, 0];
@@ -1313,22 +1315,36 @@ const Game = (() => {
     }
 
     /* --- drift state --- */
-    const drifting = Boolean(input.drift) && speed > 18;
+    const steerReq = (input.left ? -1 : 0) + (input.right ? 1 : 0);   // raw steering request
+    const drifting = Boolean(input.drift) && speed > 18 && steerReq !== 0;
     if (drifting) {
       driftTime += dt;
+      driftBoost = Math.min(36, driftBoost + 16 * dt);                 // charge the release boost
       driftScoreClock += dt;
       while (driftScoreClock > 0.25) { driftScoreClock -= 0.25; score += 6 * comboMult(); }
-      // tyre smoke from the rear wheels
+      // tyre smoke angles away from the turn
       driftSmokeT -= dt;
       if (driftSmokeT <= 0) {
-        driftSmokeT = 0.075;
-        Smoke.emit(new THREE.Vector3(player.x - 0.75, 0.35, PLAYER_Z - 1.8), new THREE.Vector3(0, 0.8, 2), 1);
-        Smoke.emit(new THREE.Vector3(player.x + 0.75, 0.35, PLAYER_Z - 1.8), new THREE.Vector3(0, 0.8, 2), 1);
+        driftSmokeT = 0.06;
+        const dir = steerReq > 0 ? -1 : 1;
+        Smoke.emit(new THREE.Vector3(player.x - 0.75, 0.35, PLAYER_Z - 1.8), new THREE.Vector3(dir * 1.2, 0.9, 2), 1);
+        Smoke.emit(new THREE.Vector3(player.x + 0.75, 0.35, PLAYER_Z - 1.8), new THREE.Vector3(dir * 1.2, 0.9, 2), 1);
         AudioFX.sfx.skid();
       }
     } else {
-      driftTime = 0;
+      // drift release: the stored charge pops as a speed boost + combo
+      if (driftPrev && driftBoost >= 8) {
+        const boost = driftBoost;
+        speed = Math.min(diff.maxSpeed, speed + boost);
+        score += Math.round(boost * comboMult());
+        combo++; comboT = 3.5;
+        FloatTexts.show('DRIFT +' + Math.round(boost * 3.6) + ' KM/H', '#8ef0ff', new THREE.Vector3(player.x, 2, PLAYER_Z - 1), camera);
+        Smoke.emit(new THREE.Vector3(player.x, 0.4, PLAYER_Z - 1.4), new THREE.Vector3(0, 4, 0), 8);
+        AudioFX.sfx.skid();
+      }
+      driftTime = 0; driftBoost = 0;
     }
+    driftPrev = drifting;
 
     /* --- speed --- */
     const rampMax = Math.min(diff.maxSpeed, 30 + elapsed * (diff.maxSpeed - 30) / 45);

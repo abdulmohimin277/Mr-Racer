@@ -556,48 +556,79 @@ body.touch .hud-hints { display: none; }
   z-index: 25;
   pointer-events: none;
 }
-#touch-controls .touch-btns { position: absolute; bottom: calc(104px + env(safe-area-inset-bottom)); left: 18px; display: flex; gap: 14px; }
+/* thumb clusters: left = DRIFT + steer arrows, right = BRAKE/GAS + FIRE */
+#touch-controls .touch-left,
+#touch-controls .touch-right {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.6vmin, 14px);
+  pointer-events: none;
+}
+#touch-controls .touch-left {
+  left: max(2%, env(safe-area-inset-left));
+  bottom: max(2.5%, env(safe-area-inset-bottom));
+}
+#touch-controls .touch-right {
+  right: max(2%, env(safe-area-inset-right));
+  bottom: max(2.5%, env(safe-area-inset-bottom));
+}
+#touch-controls .touch-btns,
+#touch-controls .touch-pedals {
+  display: flex;
+  gap: clamp(6px, 1.6vmin, 14px);
+  pointer-events: none;
+}
+/* buttons scale with the screen so they never crowd on any phone */
 .tbtn {
   pointer-events: auto;
-  width: 78px; height: 78px;
+  width: clamp(52px, 11vmin, 78px);
+  height: clamp(52px, 11vmin, 78px);
   border-radius: 50%;
-  font-size: 26px;
+  font-size: clamp(10px, 2.9vmin, 15px);
+  font-weight: 700;
+  letter-spacing: 1px;
   color: var(--text-main);
-  background: rgba(40, 24, 10, 0.55);
+  background: rgba(10, 22, 45, 0.55);
   border: 2px solid rgba(64, 178, 255, 0.5);
   backdrop-filter: blur(4px);
   cursor: pointer;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   transition: transform 0.08s ease, background 0.15s ease;
 }
 .tbtn:active { transform: scale(0.9); background: rgba(64, 178, 255, 0.28); }
-.tbtn-fire {
-  position: absolute; right: 18px; bottom: calc(104px + env(safe-area-inset-bottom));
-  width: 88px; height: 88px;
-  font-size: 34px;
-  border-color: rgba(64, 178, 255, 0.7);
-  background: rgba(10, 22, 45, 0.55);
+/* steer arrows are single glyphs — keep them big and tappable */
+#touch-controls .touch-btns .tbtn {
+  font-size: clamp(17px, 4.4vmin, 26px);
+  line-height: 1;
 }
-.tbtn-fire:active { background: rgba(64, 178, 255, 0.42); }
-.tbtn-gaspedal {
-  position: absolute; right: calc(120px + env(safe-area-inset-right)); bottom: calc(104px + env(safe-area-inset-bottom));
-  border-color: rgba(120, 224, 255, 0.55);
-}
-.tbtn-gaspedal:active { background: rgba(120, 224, 255, 0.28); }
-.tbtn-brake {
-  position: absolute; left: calc(96px + env(safe-area-inset-left)); bottom: calc(104px + env(safe-area-inset-bottom));
-  width: 64px; height: 64px;
-  border-color: rgba(120, 224, 255, 0.55);
-  background: rgba(10, 22, 45, 0.55);
-}
-.tbtn-brake:active { background: rgba(120, 224, 255, 0.3); }
 .tbtn-drift {
-  position: absolute; left: 18px; bottom: calc(202px + env(safe-area-inset-bottom));
-  width: 64px; height: 64px;
   border-color: rgba(64, 178, 255, 0.5);
   background: rgba(10, 22, 45, 0.5);
 }
 .tbtn-drift:active { background: rgba(64, 178, 255, 0.3); }
+.tbtn-brake {
+  width: clamp(46px, 10vmin, 70px);
+  height: clamp(46px, 10vmin, 70px);
+  border-color: rgba(120, 224, 255, 0.55);
+  background: rgba(10, 22, 45, 0.55);
+}
+.tbtn-brake:active { background: rgba(120, 224, 255, 0.3); }
+.tbtn-gaspedal {
+  border-color: rgba(120, 224, 255, 0.55);
+  background: rgba(10, 22, 45, 0.6);
+}
+.tbtn-gaspedal:active { background: rgba(120, 224, 255, 0.28); }
+.tbtn-fire {
+  width: clamp(62px, 14.5vmin, 96px);
+  height: clamp(62px, 14.5vmin, 96px);
+  font-size: clamp(13px, 3.6vmin, 18px);
+  border-color: rgba(64, 178, 255, 0.7);
+}
+.tbtn-fire:active { background: rgba(64, 178, 255, 0.42); }
 .tbtn.on {
   background: rgba(120, 224, 255, 0.3);
   border-color: rgba(120, 224, 255, 0.9);
@@ -611,12 +642,6 @@ body.touch .hud-hints { display: none; }
   .hud-panel { min-width: 84px; padding: 8px 12px; }
   .hud-panel span[id] { font-size: 17px; }
   .speedo { width: 46vw; }
-  #touch-controls .touch-btns { gap: 10px; }
-  .tbtn { width: 64px; height: 64px; font-size: 22px; }
-  .tbtn-fire { width: 76px; height: 76px; font-size: 30px; }
-  .tbtn-gaspedal { width: 58px; height: 58px; }
-  .tbtn-brake { width: 56px; height: 56px; }
-  .tbtn-drift { width: 54px; height: 54px; bottom: calc(186px + env(safe-area-inset-bottom)); left: 14px; }
 }
 
 /* Tiny phone screens: keep the 4-panel HUD row compact */

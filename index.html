@@ -30,8 +30,8 @@
         <span class="hud-label">BEST</span>
         <span id="hud-best">0</span>
       </div>
-      <button id="btn-touch-cam" class="hud-panel touch-pause touch-cam hidden" aria-label="Change camera view">📷&nbsp;VIEW</button>
-      <button id="btn-touch-pause" class="hud-panel touch-pause hidden" aria-label="Pause">⏸&nbsp;PAUSE</button>
+      <button id="btn-touch-cam" class="hud-panel touch-pause touch-cam hidden" aria-label="Change camera view">VIEW</button>
+      <button id="btn-touch-pause" class="hud-panel touch-pause hidden" aria-label="Pause">PAUSE</button>
     </div>
     <div class="hud-mid">
       <div class="lives" id="hud-lives" title="Lives">
@@ -84,7 +84,7 @@
           <div class="sound-select">
             <span class="row-label">SOUND</span>
             <div class="seg" id="sound-seg">
-              <button id="btn-sound" class="seg-btn active">🔊 ON</button>
+              <button id="btn-sound" class="seg-btn active">SOUND ON</button>
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@
           <div class="diff-select" style="flex:1">
             <span class="row-label">TIME OF DAY</span>
             <div class="seg" id="time-seg">
-              <button data-time="day" class="seg-btn active">☀️ DAY</button>
+              <button data-time="day" class="seg-btn active">DAY</button>
               <button data-time="cycle" class="seg-btn">🔄 CYCLE</button>
               <button data-time="night" class="seg-btn">🌙 NIGHT</button>
             </div>
@@ -134,7 +134,7 @@
       </div>
 
       <div class="menu-foot">
-        <span class="best-badge">🏆 BEST SCORE&nbsp; <b id="menu-best">0</b></span>
+        <span class="best-badge">★ BEST SCORE&nbsp; <b id="menu-best">0</b></span>
         <span class="foot-tip">Hold <kbd>↑</kbd> to speed up &amp; blast the traffic with <kbd>SPACE</kbd></span>
       </div>
     </div>
@@ -149,7 +149,7 @@
         <div class="howto-item"><span class="key">↑</span><span class="key">W</span><div><b>Accelerate</b><p>Go faster, more distance = more score</p></div></div>
         <div class="howto-item"><span class="key">X</span><span class="key">SHIFT</span><div><b>Drift</b><p>Hold to slide &amp; cut corners sharper. Earns drift points. Watch for oil slicks!</p></div></div>
         <div class="howto-item"><span class="key">SPACE</span><div><b>Blaster</b><p>Shoot traffic &amp; barriers. Kills refill your gun charge.</p></div></div>
-        <div class="howto-item"><span class="key">C</span><div><b>Cockpit view</b><p>Toggle the in-car dashboard &amp; steering wheel. On touch devices use 📷 VIEW.</p></div></div>
+        <div class="howto-item"><span class="key">C</span><div><b>Cockpit view</b><p>Toggle the in-car dashboard &amp; steering wheel. On touch devices use the VIEW button.</p></div></div>
         <div class="howto-item"><span class="key">P</span><span class="key">ESC</span><div><b>Pause</b><p>R = quick restart, M = mute, N = refill blaster</p></div></div>
         <div class="howto-item"><span class="coin-icon">⛁</span><div><b>Coins</b><p>Collect golden coins for bonus points.</p></div></div>
         <div class="howto-item"><span class="health-icon">♥</span><div><b>Lives</b><p>You have 3 lives. Collisions cost one.</p></div></div>
@@ -180,7 +180,7 @@
         <div class="stat"><span class="stat-label">DISTANCE</span><span id="go-distance" class="stat-value">0 m</span></div>
         <div class="stat"><span class="stat-label">TRAFFIC BLASTED</span><span id="go-kills" class="stat-value">0</span></div>
       </div>
-      <div class="new-best hidden" id="new-best-badge">🏆 NEW BEST SCORE!</div>
+      <div class="new-best hidden" id="new-best-badge">★ NEW BEST SCORE!</div>
       <button id="btn-retry" class="btn btn-primary">↻&nbsp; RACE AGAIN</button>
       <button id="btn-gomenu" class="btn btn-ghost">🏠&nbsp; MAIN MENU</button>
     </div>
@@ -197,14 +197,20 @@
 
   <!-- Touch controls (shown automatically on touch devices) -->
   <div id="touch-controls" class="hidden">
-    <div class="touch-btns">
-      <button class="tbtn" data-touch="left" aria-label="Left">◀</button>
-      <button class="tbtn" data-touch="right" aria-label="Right">▶</button>
+    <div class="touch-left">
+      <button class="tbtn tbtn-drift" data-touch="drift" aria-label="Drift">DRIFT</button>
+      <div class="touch-btns">
+        <button class="tbtn" data-touch="left" aria-label="Left">◀</button>
+        <button class="tbtn" data-touch="right" aria-label="Right">▶</button>
+      </div>
     </div>
-    <button class="tbtn tbtn-drift" data-touch="drift" aria-label="Drift">🌀</button>
-    <button class="tbtn tbtn-fire" data-touch="fire" aria-label="Shoot">🎯</button>
-    <button class="tbtn tbtn-gaspedal" data-touch="gas" aria-label="Accelerate">▲</button>
-    <button class="tbtn tbtn-brake" data-touch="brake" aria-label="Brake">▼</button>
+    <div class="touch-right">
+      <div class="touch-pedals">
+        <button class="tbtn tbtn-brake" data-touch="brake" aria-label="Brake">BRAKE</button>
+        <button class="tbtn tbtn-gaspedal" data-touch="gas" aria-label="Accelerate">GAS</button>
+      </div>
+      <button class="tbtn tbtn-fire" data-touch="fire" aria-label="Shoot">FIRE</button>
+    </div>
   </div>
 
   <!-- Three.js (CDN with fallback) -->
