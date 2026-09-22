@@ -12,12 +12,12 @@ const Game = (() => {
   };
 
   const CAR_OPTIONS = [
-    { id: 'ember',  name: 'EMBER GT',   color: 0xffc219, glow: 0xff6a00 },
-    { id: 'blaze',  name: 'BLAZE X',    color: 0xff3b10, glow: 0xff8c1f },
-    { id: 'shadow', name: 'NIGHT FANG', color: 0x39404f, glow: 0xff7a1a },
-    { id: 'gold',   name: 'GOLD RUSH',  color: 0xffd23d, glow: 0xffb347 },
-    { id: 'comet',  name: 'COMET RS',   color: 0xff5e3d, glow: 0xffb347 },
-    { id: 'onyx',   name: 'ONYX GT',    color: 0x2a2e37, glow: 0xff8c1f },
+    { id: 'ember',  name: 'EMBER GT',   color: 0xffc219, glow: 0x2f8fff },
+    { id: 'blaze',  name: 'BLAZE X',    color: 0xff3b10, glow: 0x3fb8ff },
+    { id: 'shadow', name: 'NIGHT FANG', color: 0x39404f, glow: 0x2fa8ff },
+    { id: 'gold',   name: 'GOLD RUSH',  color: 0xe8c05a, glow: 0x6ad6ff },
+    { id: 'comet',  name: 'COMET RS',   color: 0xff5e3d, glow: 0x6ad6ff },
+    { id: 'onyx',   name: 'ONYX GT',    color: 0x2a2e37, glow: 0x3fb8ff },
   ];
 
   const LANES = [-4.666, 0, 4.666];
@@ -35,7 +35,7 @@ const Game = (() => {
   let renderer, scene, camera;
   let player = null;
   let neonLight = null;
-  let input = { left: false, right: false, throttle: false, fire: false, drift: false };
+  let input = { left: false, right: false, throttle: false, fire: false, drift: false, brake: false };
 
   // day / night cycle
   let timeSetting = 'day';            // day | cycle | night (day is the default theme)
@@ -75,8 +75,8 @@ const Game = (() => {
   // paint override (6-hex string like 'ff5e3d', or null for the stock factory paint)
   let paintOverride = null;
 
-  // road architecture: flyover bridges
-  let archSlots = [];
+  // highway curvature — the road turns left/right as you drive
+  let roadYaw = 0, roadYawTarget = 0, roadYawTimer = 0;
 
   // scenery
   let sideSlots = [], skySlots = [], cloudSlots = [], streakSlots = [];
@@ -117,16 +117,16 @@ const Game = (() => {
 
   /* ---------------- sky + fog (day/night cycle, flat colors only) ---------------- */
   const SKY_PHASES = [
-    // 0 day   — bright warm orange day, big sliced sun with rays
-    { sky: '#ffc46a', sun: '#fff6d8', rays: '#ffb031', moon: false, cloud: 0xffffff, cloudOp: 0.6,  mount: 0xa86f3a },
-    // 1 dusk  — classic orange sunset
-    { sky: '#ff8c1f', sun: '#ffd166', rays: null,      moon: false, cloud: 0xffb9d8, cloudOp: 0.42, mount: 0x3a2010 },
-    // 2 night — deep indigo, small moon + flat stars
-    { sky: '#14111e', sun: null,      rays: null,      moon: true,  cloud: 0x3a2f5a, cloudOp: 0.16, mount: 0x1f1406 },
-    // 3 dawn  — golden sunrise
-    { sky: '#ffa24d', sun: '#fff0c5', rays: null,      moon: false, cloud: 0xffd9b8, cloudOp: 0.5,  mount: 0x7a4a1f },
+    // 0 day   — bright blue day, big pale sun with rays
+    { sky: '#4aa3ff', sun: '#f2f8ff', rays: '#d6ecff', moon: false, cloud: 0xffffff, cloudOp: 0.65, mount: 0x2a68a8 },
+    // 1 dusk  — electric indigo sunset
+    { sky: '#5f7dff', sun: '#cfe7ff', rays: null,      moon: false, cloud: 0xffd9f0, cloudOp: 0.42, mount: 0x1b2a5c },
+    // 2 night — deep navy, small moon + flat stars
+    { sky: '#0a1030', sun: null,      rays: null,      moon: true,  cloud: 0x2a3566, cloudOp: 0.18, mount: 0x0e1330 },
+    // 3 dawn  — pale blue dawn
+    { sky: '#82b6ff', sun: '#f2f8ff', rays: null,      moon: false, cloud: 0xfff0e8, cloudOp: 0.52, mount: 0x3f6fb0 },
   ];
-  const FOG_DAY = 0xffb45e, FOG_NIGHT = 0x241b33;
+  const FOG_DAY = 0x6db0ff, FOG_NIGHT = 0x101c42;
 
   function drawSky(phase) {
     const p = SKY_PHASES[phase];
@@ -227,10 +227,10 @@ const Game = (() => {
 
   /* ---------------- lights ---------------- */
   function makeLights() {
-    hemiLight = new THREE.HemisphereLight(0xffb066, 0x331a05, 0.75);
+    hemiLight = new THREE.HemisphereLight(0xa8ccff, 0x15233f, 0.75);
     scene.add(hemiLight);
 
-    sunLight = new THREE.DirectionalLight(0xffcaa0, 1.25);
+    sunLight = new THREE.DirectionalLight(0xdbeaff, 1.25);
     sunLight.position.set(60, 90, -140);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.set(IS_MOBILE ? 1024 : 2048, IS_MOBILE ? 1024 : 2048);
@@ -244,12 +244,12 @@ const Game = (() => {
     scene.add(sunLight);
     scene.add(sunLight.target);
 
-    fillLight = new THREE.DirectionalLight(0xff9e45, 0.35);
+    fillLight = new THREE.DirectionalLight(0x66c8ff, 0.35);
     fillLight.position.set(-50, 40, 60);
     scene.add(fillLight);
 
     // neon under-glow that follows the player
-    neonLight = new THREE.PointLight(0xff7a1a, 22, 14, 2);
+    neonLight = new THREE.PointLight(0x2fa8ff, 22, 14, 2);
     neonLight.position.set(0, 1.4, PLAYER_Z);
     scene.add(neonLight);
   }
@@ -257,14 +257,14 @@ const Game = (() => {
   /* ---------------- road ---------------- */
   function makeRoad() {
     roadTex = canvasTex(256, 1024, (ctx, w, h) => {
-      ctx.fillStyle = '#241d12';
+      ctx.fillStyle = '#101a2e';
       ctx.fillRect(0, 0, w, h);
       for (let i = 0; i < 34; i++) {
         ctx.fillStyle = `rgba(0,0,0,${0.10 + Math.random() * 0.16})`;
         ctx.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 5, 20 + Math.random() * 70);
       }
       for (let i = 0; i < 22; i++) {
-        ctx.fillStyle = `rgba(150,105,55,${0.05 + Math.random() * 0.07})`;
+        ctx.fillStyle = `rgba(95,145,215,${0.05 + Math.random() * 0.07})`;
         ctx.fillRect(Math.random() * w, Math.random() * h, 1.5, 30 + Math.random() * 90);
       }
       for (let band = 0; band < 2; band++) {
@@ -295,7 +295,7 @@ const Game = (() => {
     roadMesh.receiveShadow = true;
     scene.add(roadMesh);
 
-    const shoulderMat = new THREE.MeshStandardMaterial({ color: 0x241608, roughness: 0.95 });
+    const shoulderMat = new THREE.MeshStandardMaterial({ color: 0x0d162c, roughness: 0.95 });
     for (const sx of [-1, 1]) {
       const sh = new THREE.Mesh(new THREE.PlaneGeometry(6, 450), shoulderMat);
       sh.rotation.x = -Math.PI / 2;
@@ -306,7 +306,7 @@ const Game = (() => {
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(900, 620),
-      new THREE.MeshStandardMaterial({ color: 0x1a0f04, roughness: 1 })
+      new THREE.MeshStandardMaterial({ color: 0x0a1226, roughness: 1 })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.05, -180);
@@ -315,7 +315,7 @@ const Game = (() => {
 
     const railMat = new THREE.MeshStandardMaterial({ color: 0x8790a8, metalness: 0.85, roughness: 0.35 });
     const postMat = new THREE.MeshStandardMaterial({ color: 0x5d6478, metalness: 0.6, roughness: 0.5 });
-    const neonMat = new THREE.MeshBasicMaterial({ color: 0xff8c1f, transparent: true, opacity: 0.9 });
+    const neonMat = new THREE.MeshBasicMaterial({ color: 0x3fb8ff, transparent: true, opacity: 0.9 });
     for (const sx of [-1, 1]) {
       const x = sx * (ROAD_W / 2 + 0.85);
       const rail = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.35, 450), railMat);
@@ -340,13 +340,13 @@ const Game = (() => {
   /* ---------------- scenery ---------------- */
   function makeWindowTex() {
     return canvasTex(64, 128, (ctx, w, h) => {
-      ctx.fillStyle = '#160d04';
+      ctx.fillStyle = '#0a1020';
       ctx.fillRect(0, 0, w, h);
       for (let x = 4; x < w - 4; x += 11) {
         for (let y = 6; y < h - 6; y += 13) {
           ctx.fillStyle = Math.random() < 0.3
-            ? (Math.random() < 0.5 ? 'rgba(255,214,110,0.85)' : 'rgba(255,170,60,0.9)')
-            : 'rgba(44,28,12,0.9)';
+            ? (Math.random() < 0.5 ? 'rgba(150,220,255,0.85)' : 'rgba(110,195,255,0.9)')
+            : 'rgba(20,36,72,0.9)';
           ctx.fillRect(x, y, 5, 7);
         }
       }
@@ -356,17 +356,17 @@ const Game = (() => {
   function makeBillboardTex(idx) {
     const msgs = ['NEON RUSH', 'TURBO COLA', 'HYPER MART', 'BLASTER OIL', 'FUTURE CITY', 'GAS ★ MAXX'];
     return canvasTex(256, 128, (ctx, w, h) => {
-      ctx.fillStyle = '#2a1a06';
+      ctx.fillStyle = '#0e1830';
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#ff8c1f';
+      ctx.fillStyle = '#3fb8ff';
       ctx.fillRect(0, h - 10, w, 10);
-      ctx.fillStyle = '#ffb347';
+      ctx.fillStyle = '#6ad6ff';
       ctx.fillRect(0, 0, w, 6);
       ctx.fillStyle = '#fff';
       ctx.font = '900 34px Orbitron, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.shadowColor = '#ff8c1f';
+      ctx.shadowColor = '#3fb8ff';
       ctx.shadowBlur = 14;
       ctx.fillText(msgs[idx % msgs.length], w / 2, h / 2 - 4);
       ctx.shadowBlur = 0;
@@ -402,11 +402,11 @@ const Game = (() => {
       arm.position.set(0.85, 5.4, 0);
       arm.rotation.z = 0.12;
       g.add(arm);
-      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       lamp.position.set(1.65, 5.35, 0);
       g.add(lamp);
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: cloudTex(), color: 0xffe9a8, transparent: true, opacity: 0.55,
+        map: cloudTex(), color: 0xd8ecff, transparent: true, opacity: 0.55,
         blending: THREE.AdditiveBlending, depthWrite: false,
       }));
       halo.position.set(1.65, 5.2, 0);
@@ -507,7 +507,7 @@ const Game = (() => {
     const tex = cloudTex();
     for (let i = 0; i < (IS_MOBILE ? 6 : 9); i++) {
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: tex, transparent: true, opacity: 0.42, depthWrite: false, color: 0xffb9d8,
+        map: tex, transparent: true, opacity: 0.42, depthWrite: false, color: 0xffffff,
       }));
       sp.position.set((Math.random() - 0.5) * 460, 60 + Math.random() * 55, -(Math.random() * 280));
       sp.scale.set(40 + Math.random() * 70, 14 + Math.random() * 20, 1);
@@ -517,7 +517,7 @@ const Game = (() => {
   }
 
   function makeStreaks() {
-    const colors = [0xffb347, 0xff8c1f, 0xffd23d];
+    const colors = [0x6ad6ff, 0x3fb8ff, 0x8ef0ff];
     for (let i = 0; i < (IS_MOBILE ? 10 : 16); i++) {
       const m = new THREE.Mesh(
         new THREE.PlaneGeometry(0.14, 4),
@@ -533,47 +533,18 @@ const Game = (() => {
     }
   }
 
-  /* ---------------- road architecture (flyover bridges) ---------------- */
-  function makeArchSlots() {
-    const deckMat = new THREE.MeshStandardMaterial({ color: 0x3a3130, roughness: 0.9 });
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x2c2118, roughness: 0.95 });
-    const stripMat = new THREE.MeshBasicMaterial({ color: 0xff8c1f });
-    for (let i = 0; i < (IS_MOBILE ? 3 : 5); i++) {
-      const g = new THREE.Group();
-      const deck = new THREE.Mesh(new THREE.BoxGeometry(26, 2.2, 7), deckMat);
-      deck.position.y = 6.4;
-      deck.castShadow = !IS_MOBILE;
-      g.add(deck);
-      const strip = new THREE.Mesh(new THREE.BoxGeometry(26, 0.14, 6.8), stripMat);
-      strip.position.y = 5.26;
-      g.add(strip);
-      for (const px of [-12.5, 12.5]) {
-        for (const pz of [-2.4, 2.4]) {
-          const post = new THREE.Mesh(new THREE.BoxGeometry(1.1, 6.4, 1.1), postMat);
-          post.position.set(px, 3.2, pz);
-          post.castShadow = !IS_MOBILE;
-          g.add(post);
-        }
-      }
-      const slot = { group: g, z: 24 - 90 - i * 100 };
-      g.position.set(0, 0, slot.z);
-      scene.add(g);
-      archSlots.push(slot);
-    }
-  }
-
   /* ---------------- pools ---------------- */
   function makeCoinMesh() {
     const g = new THREE.Group();
     const disc = new THREE.Mesh(
       new THREE.CylinderGeometry(0.55, 0.55, 0.16, 24),
-      new THREE.MeshStandardMaterial({ color: 0xf7b731, emissive: 0xffa200, emissiveIntensity: 1.1, metalness: 0.9, roughness: 0.25 })
+      new THREE.MeshStandardMaterial({ color: 0x35c8ff, emissive: 0x3fb8ff, emissiveIntensity: 1.1, metalness: 0.9, roughness: 0.25 })
     );
     disc.rotation.x = Math.PI / 2;
     g.add(disc);
     const inner = new THREE.Mesh(
       new THREE.CylinderGeometry(0.34, 0.34, 0.2, 18),
-      new THREE.MeshStandardMaterial({ color: 0xffd23d, emissive: 0xffcf3d, emissiveIntensity: 0.9, metalness: 0.85, roughness: 0.3 })
+      new THREE.MeshStandardMaterial({ color: 0x8ef0ff, emissive: 0x8ef0ff, emissiveIntensity: 0.9, metalness: 0.85, roughness: 0.3 })
     );
     inner.rotation.x = Math.PI / 2;
     g.add(inner);
@@ -585,7 +556,7 @@ const Game = (() => {
   function makeAmmoMesh() {
     const m = new THREE.Mesh(
       new THREE.OctahedronGeometry(0.6, 0),
-      new THREE.MeshStandardMaterial({ color: 0xff9a2e, emissive: 0xff7a1a, emissiveIntensity: 1.3, metalness: 0.4, roughness: 0.3 })
+      new THREE.MeshStandardMaterial({ color: 0x4dc9ff, emissive: 0x2fa8ff, emissiveIntensity: 1.3, metalness: 0.4, roughness: 0.3 })
     );
     m.visible = false;
     scene.add(m);
@@ -594,7 +565,7 @@ const Game = (() => {
 
   function makeConeTex() {
     return canvasTex(64, 64, (ctx, w, h) => {
-      ctx.fillStyle = '#f97316';
+      ctx.fillStyle = '#e4483f';
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = '#f6f7fb';
       ctx.fillRect(0, h * 0.45, w, h * 0.22);
@@ -665,7 +636,7 @@ const Game = (() => {
   function makeBarrier(x, z) {
     const g = new THREE.Group();
     const panelTex = canvasTex(64, 64, (ctx, w, h) => {
-      ctx.fillStyle = '#f97316';
+      ctx.fillStyle = '#e4483f';
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = '#f6f7fb';
       for (let y = 0; y < h; y += 16) ctx.fillRect(0, y, w, 8);
@@ -686,7 +657,7 @@ const Game = (() => {
     }
     const lamp = new THREE.Mesh(
       new THREE.BoxGeometry(2.6, 0.14, 0.16),
-      new THREE.MeshBasicMaterial({ color: 0xffd166 })
+      new THREE.MeshBasicMaterial({ color: 0x8ef0ff })
     );
     lamp.position.y = 1.34;
     g.add(lamp);
@@ -905,10 +876,10 @@ const Game = (() => {
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = '#0d0a05';
       ctx.beginPath(); ctx.arc(w / 2, h / 2, w * 0.46, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#ff8c1f';
+      ctx.strokeStyle = '#3fb8ff';
       ctx.lineWidth = w * 0.07;
       ctx.beginPath(); ctx.arc(w / 2, h / 2, w * 0.46, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = '#b35c14';
+      ctx.strokeStyle = '#2f7fb8';
       ctx.lineWidth = w * 0.05;
       for (let i = 0; i < 3; i++) {
         ctx.save();
@@ -917,7 +888,7 @@ const Game = (() => {
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -h * 0.42); ctx.stroke();
         ctx.restore();
       }
-      ctx.fillStyle = '#ffd23d';
+      ctx.fillStyle = '#8ef0ff';
       ctx.beginPath(); ctx.arc(w / 2, h / 2, w * 0.1, 0, Math.PI * 2); ctx.fill();
     });
     const wheel = new THREE.Mesh(
@@ -929,16 +900,16 @@ const Game = (() => {
     c.add(wheelGroup);
     cockpitWheel = wheel;
 
-    // speedometer gauge (orange flat dial)
+    // speedometer gauge (blue flat dial)
     const gaugeTex = canvasTex(160, 160, (ctx, w, h) => {
       const cx = w / 2, cy = h / 2, R = w * 0.44;
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = '#15100a';
+      ctx.fillStyle = '#101827';
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#ff3b10';
       ctx.lineWidth = w * 0.05;
       ctx.beginPath(); ctx.arc(cx, cy, R * 0.86, Math.PI * 0.32, Math.PI * 0.75); ctx.stroke();   // redline
-      ctx.strokeStyle = '#ff8c1f';
+      ctx.strokeStyle = '#3fb8ff';
       ctx.lineWidth = w * 0.022;
       for (let i = 0; i <= 48; i++) {
         const a = -Math.PI * 0.75 + (i / 48) * (Math.PI * 1.5);
@@ -948,7 +919,7 @@ const Game = (() => {
         ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
         ctx.stroke();
       }
-      ctx.fillStyle = '#ffd23d';
+      ctx.fillStyle = '#8ef0ff';
       ctx.font = 'bold ' + Math.round(w * 0.11) + 'px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -956,7 +927,7 @@ const Game = (() => {
         const a = -Math.PI * 0.75 + (i / 8) * (Math.PI * 1.5);
         ctx.fillText(String(i * 30), cx + Math.cos(a) * R * 0.63, cy + Math.sin(a) * R * 0.63);
       }
-      ctx.fillStyle = '#ffb347';
+      ctx.fillStyle = '#6ad6ff';
       ctx.font = 'bold ' + Math.round(w * 0.07) + 'px monospace';
       ctx.fillText('KM/H', cx, cy + R * 0.34);
     });
@@ -974,13 +945,13 @@ const Game = (() => {
     needlePivot.position.copy(gaugePivot.position);
     const needle = new THREE.Mesh(
       new THREE.BoxGeometry(0.022, 0.18, 0.012),
-      new THREE.MeshBasicMaterial({ color: 0xff8c1f })
+      new THREE.MeshBasicMaterial({ color: 0x3fb8ff })
     );
     needle.position.y = 0.085;
     needlePivot.add(needle);
     const cap = new THREE.Mesh(
       new THREE.CylinderGeometry(0.02, 0.02, 0.02, 10),
-      new THREE.MeshBasicMaterial({ color: 0xffd23d })
+      new THREE.MeshBasicMaterial({ color: 0x8ef0ff })
     );
     cap.rotation.x = Math.PI / 2;
     needlePivot.add(cap);
@@ -1027,27 +998,27 @@ const Game = (() => {
     if (!mirrorCtx) return;
     const w = mirrorCanvas.width, h = mirrorCanvas.height;
     const ctx = mirrorCtx;
-    ctx.fillStyle = '#1c140c';
+    ctx.fillStyle = '#0e1626';
     ctx.fillRect(0, 0, w, h);
     // glass shading
-    ctx.fillStyle = 'rgba(255,140,31,0.10)';
+    ctx.fillStyle = 'rgba(64,178,255,0.12)';
     ctx.fillRect(0, 0, w, h);
     // road + shoulder
-    ctx.fillStyle = '#2c2118';
+    ctx.fillStyle = '#14223a';
     ctx.fillRect(0, h * 0.46, w, h * 0.54);
-    ctx.fillStyle = '#19110a';
+    ctx.fillStyle = '#0c1426';
     ctx.fillRect(0, h * 0.46, w, 2);
     // our lane centre shifts with the car's lateral position
     const cx = w / 2 - (player ? player.x * 4 : 0);
-    ctx.fillStyle = '#8a5a2a';
+    ctx.fillStyle = '#3a5f9e';
     ctx.fillRect(cx - w * 0.18, h * 0.46, 2, h * 0.54);
     ctx.fillRect(cx + w * 0.18, h * 0.46, 2, h * 0.54);
-    ctx.fillStyle = '#ffb347';
+    ctx.fillStyle = '#6ad6ff';
     ctx.fillRect(cx - 1, h * 0.46, 2, 2);
     // lane dashes rushing away behind us
     if (speed) {
       const off = ((speed * 34) % 14);
-      ctx.fillStyle = '#c98f4a';
+      ctx.fillStyle = '#9fc9ff';
       for (let y = h * 0.46 - 12 + off; y > 2; y -= 14) ctx.fillRect(cx - 1.5, y, 3, 6);
     }
     // traffic behind the player, closest = lowest + biggest
@@ -1061,7 +1032,7 @@ const Game = (() => {
         const ox = cx + (o.x - player.x) * 4;
         const rw = s * 3 + (o.type === 'truck' ? 2.5 : 0);
         const rh = s * 4.5;
-        ctx.fillStyle = o.type === 'truck' ? '#d8a03a' : (o.type === 'barrier' || o.type === 'barrel') ? '#e6503f' : '#ff5e3d';
+        ctx.fillStyle = o.type === 'truck' ? '#b9c9ff' : (o.type === 'barrier' || o.type === 'barrel') ? '#e6503f' : '#ff6a72';
         ctx.fillRect(ox - rw / 2, y, rw, rh);
       }
     }
@@ -1129,8 +1100,8 @@ const Game = (() => {
     const cdEl = document.getElementById('countdown');
     if (cdEl) { cdEl.textContent = '3'; cdEl.style.opacity = 0; }
 
-    // reposition flyover bridges for a consistent opening view
-    for (let i = 0; i < archSlots.length; i++) archSlots[i].z = 24 - 90 - i * 100;
+    // the highway starts straight, then its turns roll in
+    roadYaw = 0; roadYawTarget = 0; roadYawTimer = 1.5 + Math.random() * 1.5;
 
     for (const o of obstacles) scene.remove(o.mesh);
     obstacles.length = 0;
@@ -1180,8 +1151,8 @@ const Game = (() => {
     ent.alive = false;
     const pos = ent.mesh.position.clone();
     const colors = (ent.type === 'barrel' || ent.type === 'cone')
-      ? [0xff7d3d, 0xffd23d, 0xffffff]
-      : [0xff3d4e, 0xff8a3d, 0xffffff, ent.type === 'truck' ? 0xbfd0ff : 0xffb347];
+      ? [0x6ad6ff, 0x8ef0ff, 0xffffff]
+      : [0xff4d5e, 0x4dc9ff, 0xffffff, ent.type === 'truck' ? 0xbfd0ff : 0x6ad6ff];
     Particles.burst(pos.setY(0.8), colors, 24, 4, 1);
     Smoke.emit(pos.clone().setY(0.8), new THREE.Vector3(0, 3, 2), 6);
     AudioFX.sfx.explosion();
@@ -1192,7 +1163,7 @@ const Game = (() => {
       ammo = Math.min(MAX_AMMO, ammo + 2);
       const gain = Math.round(ent.value * comboMult());
       score += gain;
-      FloatTexts.show('+' + gain, '#ffb347', pos.clone().setY(3), camera);
+      FloatTexts.show('+' + gain, '#6ad6ff', pos.clone().setY(3), camera);
     }
     scene.remove(ent.mesh);
   }
@@ -1202,10 +1173,10 @@ const Game = (() => {
     ent.hp = (ent.hp || 1) - 1;
     if (ent.hp > 0) {
       const p = ent.mesh.position.clone().setY(0.8);
-      Particles.burst(p, [0xffe0b0, 0xff9a2e, 0xffffff], 8, 2.2, 0);
+      Particles.burst(p, [0xcfe7ff, 0x4dc9ff, 0xffffff], 8, 2.2, 0);
       AudioFX.sfx.hit();
       score += Math.round(ent.value * 0.1);
-      FloatTexts.show('+' + Math.round(ent.value * 0.1), '#ffd23d', p.setY(3), camera);
+      FloatTexts.show('+' + Math.round(ent.value * 0.1), '#8ef0ff', p.setY(3), camera);
     } else {
       destroyObstacle(ent, false);
     }
@@ -1219,10 +1190,10 @@ const Game = (() => {
     shake = Math.max(shake, 0.4);
     speed = Math.max(12, speed * 0.62);
     const p = ent.mesh.position.clone().setY(0.3);
-    Particles.burst(p, [0xffd23d, 0xff5e3d, 0xffffff], 10, 2.5, 0);
+    Particles.burst(p, [0x8ef0ff, 0xff6a72, 0xffffff], 10, 2.5, 0);
     Smoke.emit(ent.mesh.position.clone().setY(0.2), new THREE.Vector3(0, 1.5, 3), 6);
     AudioFX.sfx.oil();
-    FloatTexts.show('SLICK!', '#ffd23d', ent.mesh.position.clone().setY(3), camera);
+    FloatTexts.show('SLICK!', '#8ef0ff', ent.mesh.position.clone().setY(3), camera);
   }
 
   function crash(ent) {
@@ -1232,7 +1203,7 @@ const Game = (() => {
     invuln = 2.4;
     speed = Math.max(16, speed * 0.55);
     const p = ent.mesh.position.clone().setY(0.8);
-    Particles.burst(p, [0xff5e3d, 0xffd23d, 0xffffff], 30, 4.5, 1);
+    Particles.burst(p, [0xff6a72, 0x8ef0ff, 0xffffff], 30, 4.5, 1);
     Smoke.emit(p, new THREE.Vector3(0, 3, 4), 10);
     AudioFX.sfx.crash();
     document.getElementById('damage-vignette').style.opacity = 1;
@@ -1269,7 +1240,7 @@ const Game = (() => {
     // gun barrels sit at the front of the car (~world z 1.4)
     Bolts.fire(px - 0.55, 0.75, PLAYER_Z - 2.3, charge);
     Bolts.fire(px + 0.55, 0.75, PLAYER_Z - 2.3, charge);
-    Particles.burst(new THREE.Vector3(px, 0.75, PLAYER_Z - 2.8), [0xffe0b0, 0xff9a2e, 0xffffff], 4, 2.5, 0);
+    Particles.burst(new THREE.Vector3(px, 0.75, PLAYER_Z - 2.8), [0xcfe7ff, 0x4dc9ff, 0xffffff], 4, 2.5, 0);
     AudioFX.sfx.shoot();
   }
 
@@ -1369,6 +1340,10 @@ const Game = (() => {
     const rampMax = Math.min(diff.maxSpeed, 30 + elapsed * (diff.maxSpeed - 30) / 45);
     let effMax = input.throttle ? rampMax : rampMax * 0.46;
     if (drifting) effMax = Math.min(rampMax, effMax + 10);   // drift boost
+    if (input.brake) {                      // brake pedal — hard deceleration
+      effMax = Math.min(effMax, 4);
+      speed = Math.max(2, speed - 62 * dt);
+    }
     speed = speed < effMax
       ? Math.min(effMax, speed + 26 * dt)
       : Math.max(effMax, speed - 22 * dt);
@@ -1451,7 +1426,7 @@ const Game = (() => {
           combo++; comboT = 3.5;
           const gain = Math.round(25 * comboMult());
           score += gain;
-          FloatTexts.show('NEAR MISS +' + gain, '#ffd23d', o.mesh.position.clone().setY(3.5), camera);
+          FloatTexts.show('NEAR MISS +' + gain, '#8ef0ff', o.mesh.position.clone().setY(3.5), camera);
         }
       }
       if (collidesPlayer(o)) {
@@ -1481,8 +1456,8 @@ const Game = (() => {
         coins++;
         score += Math.round(50 * comboMult());
         AudioFX.sfx.coin();
-        FloatTexts.show('+50', '#ffd23d', c.group.position.clone(), camera);
-        Particles.burst(c.group.position.clone().setY(1.2), [0xffd23d, 0xfff3b0], 6, 2, 0);
+        FloatTexts.show('+50', '#8ef0ff', c.group.position.clone(), camera);
+        Particles.burst(c.group.position.clone().setY(1.2), [0x8ef0ff, 0xcfe7ff], 6, 2, 0);
       }
     }
 
@@ -1497,7 +1472,7 @@ const Game = (() => {
         p.active = false; p.mesh.visible = false;
         ammo = Math.min(MAX_AMMO, ammo + 4);
         AudioFX.sfx.powerup();
-        FloatTexts.show('+AMMO', '#ffb347', p.mesh.position.clone(), camera);
+        FloatTexts.show('+AMMO', '#6ad6ff', p.mesh.position.clone(), camera);
       }
     }
 
@@ -1547,11 +1522,14 @@ const Game = (() => {
         s.mesh.position.x = LANES[(Math.random() * 3) | 0] + (Math.random() - 0.5) * 2.6;
       }
     }
-    for (const a of archSlots) {
-      a.z += scroll;
-      if (a.z > 26) a.z -= 460;
-      a.group.position.z = a.z;
+    /* --- highway turns: the road slowly curves left & right --- */
+    roadYawTimer -= dt;
+    if (roadYawTimer <= 0) {
+      const picks = [-0.5, -0.26, 0.26, 0.5];
+      roadYawTarget = Math.random() < 0.2 ? 0 : picks[(Math.random() * picks.length) | 0];
+      roadYawTimer = 3.4 + Math.random() * 3.4;
     }
+    roadYaw += (roadYawTarget - roadYaw) * Math.min(1, dt * 0.65);
 
     /* --- camera --- */
     const k = 1 - Math.exp(-dt * 5.2);
@@ -1569,6 +1547,11 @@ const Game = (() => {
       camera.position.z += (camBase.z + speed * 0.012 - camera.position.z) * k;
       camera.lookAt(lookX, 1.15, -3);
     }
+
+    // follow the highway curve: the view yaws into the turn and banks slightly
+    camera.rotation.y += roadYaw * 0.92;
+    camera.rotation.z += roadYaw * 0.05 * Math.min(1, speed / 40);
+    camera.position.x += Math.sin(roadYaw) * 1.7;
 
     // cockpit interior reacts to the driver
     if (cockpitWheel) {
@@ -1677,7 +1660,6 @@ const Game = (() => {
     makeMountains();
     makeClouds();
     makeStreaks();
-    makeArchSlots();
     updateDayNight();                  // re-paint with lights + scenery for the current time of day
     makePlayer();
     makeCockpit();

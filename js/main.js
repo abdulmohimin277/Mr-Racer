@@ -186,6 +186,7 @@
       if (code === 'ArrowLeft' || code === 'KeyA') input.left = key;
       if (code === 'ArrowRight' || code === 'KeyD') input.right = key;
       if (code === 'ArrowUp' || code === 'KeyW') input.throttle = key;
+      if (code === 'ArrowDown' || code === 'KeyS') input.brake = key;
       if (code === 'KeyX' || code === 'ShiftLeft' || code === 'ShiftRight') input.drift = key;
       if (code === 'Space') { input.fire = key; if (key) AudioFX.ensure(); }
     };
@@ -241,7 +242,7 @@
 
     window.addEventListener('keyup', (e) => setKey(e.code, false));
     window.addEventListener('blur', () => {
-      input.left = input.right = input.throttle = input.fire = input.drift = false;
+      input.left = input.right = input.throttle = input.fire = input.drift = input.brake = false;
     });
   }
 

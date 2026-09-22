@@ -4,23 +4,27 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 
 ## ✅ Features
 
-- **Cockpit view** — press `C` (or tap 📷 VIEW on phones) to sit inside the car: dashboard, orange
+- **Cockpit view** — press `C` (or tap 📷 VIEW on phones) to sit inside the car: dashboard, blue
   speedometer with a live needle, a steering wheel that turns with your inputs, A-pillars, roof bar
   and a **working rear-view mirror** showing the traffic behind you
 - **Start countdown** — every race kicks off with a 3·2·1·GO grid-style countdown while the engine revs
 - **Combo multiplier** — near-misses and blaster kills build a COMBO meter; each chain multiplies your
   score (up to ×4). Keep it alive by staying aggressive!
 - **3D cars** — procedurally modelled sport racer (player), sedans and cargo trucks (traffic) with real-time shadows
-- **Designed highway** — 3-lane road with scrolling lane markings, rumble strips, guardrails with glowing orange strips,
-  streetlights, trees, billboards, pylons, a lit skyline, mountains, clouds and a big retro sliced sun with rays over a warm orange day
+- **Designed highway** — 3-lane road with scrolling lane markings, rumble strips, guardrails with glowing blue strips,
+  streetlights, trees, billboards, pylons, a lit skyline, mountains, clouds and a big retro sliced sun with rays over a bright blue day
+- **Blue theme** — the whole world switched to a flat **blue** look: blue day sky, cyan neon strips &
+  underglow, navy road and a blue HUD (no more orange)
 - **Day theme + sun** — the game defaults to a bright **DAY** sky with a glowing sliced sun (and sun rays); a full
   day/night cycle (DAY → SUNSET → NIGHT → SUNRISE) or a locked **NIGHT** can still be picked from the menu
 - **Coins** — collect golden coin lines for bonus score (with sparkles & sounds)
-- **Guns** — twin nose blasters. Hold `SPACE` to fire; kills refund ammo; orange **+AMMO** pickups refill it
+- **Guns** — twin nose blasters. Hold `SPACE` to fire; kills refund ammo; glowing **+AMMO** pickups refill it
 - **Drifting** — hold `X` / `SHIFT` to slide, tighten corners and earn drift points (tyre smoke + skid sound)
 - **6 selectable cars + paint shop** — pick your ride (EMBER GT, BLAZE X, NIGHT FANG, GOLD RUSH, COMET RS,
   ONYX GT) and repaint it in the menu (red, orange, gold, sky blue, neon green, pearl white, midnight black); all saved
-- **Road variety** — the highway passes under flyover bridges with glowing orange under-lights
+- **Curving highway** — one single flat highway (no tunnels, no flyovers) that gently **turns left and
+  right** as you drive; steer through every curve and switch lanes on the straight stretches
+- **Brake pedal** — press `↓` / `S` (or hold **▼** on phones) to brake hard and slow down for the turns
 - **Day / night cycle** — optional: the highway world can roll through DAY → SUNSET → NIGHT → SUNRISE on a loop (windows light up at night, neon strips burn brighter); DAY is the default theme
 - **Busy traffic** — dense traffic with **convoys** (streams of cars in one lane) and side-by-side **wall formations** on harder difficulties
 - **Main menu** — START / HOW TO PLAY / difficulty selector (Easy, Medium, Hard) / sound toggle / best score
@@ -36,6 +40,7 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 | ----------------- | ----------------------------- |
 | `←` / `→` (or `A` / `D`) | Steer              |
 | `↑` / `W`         | Accelerate (hold)             |
+| `↓` / `S`         | Brake (hold)                  |
 | `SPACE`           | Fire blasters (hold)          |
 | `X` / `SHIFT`     | Drift / slide (hold)          |
 | `P` / `ESC`       | Pause / resume                |
@@ -50,6 +55,7 @@ The game is fully playable on phones & tablets — on-screen controls appear aut
 
 - **◀ ▶** — steer between lanes (hold)
 - **▲** — cruise control: tap once to accelerate, tap again to release (glows when active)
+- **▼** — brake (hold to slow down)
 - **🌀** — drift (hold)
 - **🎯** — fire the blasters (hold)
 - **⏸ PAUSE** — pause button in the HUD top row
@@ -78,7 +84,7 @@ python -m http.server 8899
 
 ```
 index.html          – page, menus, HUD markup
-css/style.css       – dark orange theme (no gradients)
+css/style.css       – dark blue theme (no gradients)
 js/main.js          – screens, input, buttons, touch controls
 js/game.js          – 3D world, highway, traffic, coins, blaster, game loop
 js/car.js           – procedural 3D car models

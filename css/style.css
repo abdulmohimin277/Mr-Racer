@@ -1,18 +1,18 @@
 /* ============================================================
-   NEON RUSH — dark orange night-racing theme (no gradients)
+   NEON RUSH — dark blue night-racing theme (no gradients)
    ============================================================ */
 
 :root {
-  --bg-0: #160c02;
-  --bg-1: #1c1106;
-  --panel: rgba(38, 23, 9, 0.82);
-  --panel-border: rgba(255, 160, 80, 0.3);
-  --neon-orange: #ff8c1f;
-  --neon-amber: #ffb347;
-  --neon-deep: #ff5a00;
-  --neon-yellow: #ffd23d;
-  --text-main: #fff4e6;
-  --text-dim: #b98a5c;
+  --bg-0: #060d1e;
+  --bg-1: #0b1428;
+  --panel: rgba(13, 27, 52, 0.82);
+  --panel-border: rgba(70, 170, 255, 0.3);
+  --neon-orange: #3fb8ff;
+  --neon-amber: #6ad6ff;
+  --neon-deep: #1f8fff;
+  --neon-yellow: #8ef0ff;
+  --text-main: #eef6ff;
+  --text-dim: #8db3d8;
   --danger: #ff4d5e;
   --font-title: 'Orbitron', 'Segoe UI', sans-serif;
   --font-body: 'Rajdhani', 'Segoe UI', sans-serif;
@@ -65,8 +65,8 @@ html, body {
   padding: 34px 36px 28px;
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.6),
-    0 0 60px rgba(255, 140, 31, 0.12),
-    inset 0 1px 0 rgba(255, 180, 90, 0.08);
+    0 0 60px rgba(64, 178, 255, 0.12),
+    inset 0 1px 0 rgba(140, 200, 255, 0.08);
   animation: card-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
   text-align: center;
 }
@@ -87,11 +87,11 @@ html, body {
   letter-spacing: 6px;
   line-height: 1;
   color: #fff;
-  text-shadow: 0 0 22px rgba(255, 140, 31, 0.75), 0 0 60px rgba(255, 140, 31, 0.35);
+  text-shadow: 0 0 22px rgba(64, 178, 255, 0.75), 0 0 60px rgba(64, 178, 255, 0.35);
 }
 .title-accent {
   color: var(--neon-orange);
-  text-shadow: 0 0 14px rgba(255, 140, 31, 0.55);
+  text-shadow: 0 0 14px rgba(64, 178, 255, 0.55);
 }
 .game-sub {
   margin-top: 8px;
@@ -125,16 +125,16 @@ html, body {
   background: var(--neon-orange);
   border: none;
   color: #1a0c00;
-  box-shadow: 0 8px 30px rgba(255, 140, 31, 0.45), 0 0 24px rgba(255, 140, 31, 0.35);
+  box-shadow: 0 8px 30px rgba(64, 178, 255, 0.45), 0 0 24px rgba(64, 178, 255, 0.35);
 }
 .btn-primary:hover {
   background: var(--neon-amber);
-  box-shadow: 0 10px 40px rgba(255, 160, 60, 0.6), 0 0 36px rgba(255, 140, 31, 0.5);
+  box-shadow: 0 10px 40px rgba(70, 180, 255, 0.6), 0 0 36px rgba(64, 178, 255, 0.5);
 }
 .btn-ghost:hover {
   border-color: var(--neon-orange);
   color: var(--neon-orange);
-  box-shadow: 0 0 18px rgba(255, 140, 31, 0.25);
+  box-shadow: 0 0 18px rgba(64, 178, 255, 0.25);
 }
 
 /* ---- Menu rows / segmented control ---- */
@@ -171,7 +171,7 @@ html, body {
 .seg-btn.active {
   color: #1a0c00;
   background: var(--neon-orange);
-  box-shadow: 0 4px 16px rgba(255, 140, 31, 0.4);
+  box-shadow: 0 4px 16px rgba(64, 178, 255, 0.4);
 }
 
 /* Car selector — color swatch buttons */
@@ -191,7 +191,7 @@ html, body {
   font-size: 13px;
   letter-spacing: 2px;
   color: var(--neon-yellow);
-  text-shadow: 0 0 12px rgba(255, 210, 61, 0.5);
+  text-shadow: 0 0 12px rgba(120, 224, 255, 0.5);
 }
 .foot-tip { font-size: 14px; color: var(--text-dim); }
 kbd {
@@ -211,7 +211,7 @@ kbd {
   font-size: 26px;
   letter-spacing: 4px;
   margin-bottom: 18px;
-  text-shadow: 0 0 18px rgba(255, 140, 31, 0.5);
+  text-shadow: 0 0 18px rgba(64, 178, 255, 0.5);
 }
 .howto-grid {
   display: grid;
@@ -233,9 +233,9 @@ kbd {
   font-family: var(--font-title);
   font-size: 12px;
   font-weight: 700;
-  background: rgba(255, 140, 31, 0.15);
+  background: rgba(64, 178, 255, 0.15);
   color: var(--neon-orange);
-  border: 1px solid rgba(255, 140, 31, 0.4);
+  border: 1px solid rgba(64, 178, 255, 0.4);
   border-radius: 6px;
   padding: 6px 8px;
   min-width: 44px;
@@ -244,7 +244,7 @@ kbd {
 }
 .howto-item b { font-family: var(--font-title); font-size: 13px; letter-spacing: 1px; color: #fff; }
 .howto-item p { font-size: 13px; color: var(--text-dim); margin-top: 2px; line-height: 1.35; }
-.coin-icon { font-size: 22px; filter: drop-shadow(0 0 8px rgba(255, 210, 61, 0.8)); }
+.coin-icon { font-size: 22px; filter: drop-shadow(0 0 8px rgba(120, 224, 255, 0.8)); }
 .health-icon { font-size: 20px; color: var(--danger); }
 
 /* ---- Game over ---- */
@@ -279,7 +279,7 @@ kbd {
   font-size: 15px;
   letter-spacing: 2px;
   color: var(--neon-yellow);
-  text-shadow: 0 0 16px rgba(255, 210, 61, 0.7);
+  text-shadow: 0 0 16px rgba(120, 224, 255, 0.7);
   animation: pop-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4);
 }
 @keyframes pop-in { from { transform: scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -306,7 +306,7 @@ kbd {
   background: var(--neon-orange);
   border-radius: 6px;
   animation: load 1.6s ease-in-out forwards;
-  box-shadow: 0 0 14px rgba(255, 140, 31, 0.7);
+  box-shadow: 0 0 14px rgba(64, 178, 255, 0.7);
 }
 @keyframes load { 0% { width: 0%; } 70% { width: 82%; } 100% { width: 100%; } }
 .loading-inner p { font-family: var(--font-title); letter-spacing: 5px; font-size: 13px; color: var(--text-dim); }
@@ -360,9 +360,9 @@ kbd {
   font-size: 22px;
   font-weight: 700;
   color: var(--neon-orange);
-  text-shadow: 0 0 12px rgba(255, 140, 31, 0.5);
+  text-shadow: 0 0 12px rgba(64, 178, 255, 0.5);
 }
-.hud-coins { color: var(--neon-yellow) !important; text-shadow: 0 0 12px rgba(255, 210, 61, 0.6) !important; }
+.hud-coins { color: var(--neon-yellow) !important; text-shadow: 0 0 12px rgba(120, 224, 255, 0.6) !important; }
 .hud-center { min-width: 130px; }
 
 /* Touch pause button (lives inside the HUD top row, shown on touch devices) */
@@ -379,10 +379,10 @@ kbd {
   font-weight: 700;
   letter-spacing: 2px;
   color: var(--neon-orange);
-  text-shadow: 0 0 10px rgba(255, 140, 31, 0.5);
+  text-shadow: 0 0 10px rgba(64, 178, 255, 0.5);
   transition: transform 0.1s ease, background 0.15s ease;
 }
-.touch-pause:active { transform: scale(0.92); background: rgba(255, 140, 31, 0.25); }
+.touch-pause:active { transform: scale(0.92); background: rgba(64, 178, 255, 0.25); }
 /* camera toggle button is narrower so it fits beside pause */
 .touch-cam { min-width: 70px; }
 
@@ -398,7 +398,7 @@ kbd {
   font-weight: 900;
   line-height: 1;
   color: var(--neon-orange);
-  text-shadow: 0 0 34px rgba(255, 140, 31, 0.85);
+  text-shadow: 0 0 34px rgba(64, 178, 255, 0.85);
   pointer-events: none;
   z-index: 4;
   transition: opacity 0.14s ease;
@@ -417,7 +417,7 @@ kbd {
   font-weight: 800;
   letter-spacing: 1px;
   color: var(--neon-yellow);
-  text-shadow: 0 0 14px rgba(255, 210, 61, 0.75);
+  text-shadow: 0 0 14px rgba(120, 224, 255, 0.75);
   pointer-events: none;
   z-index: 4;
   transition: opacity 0.2s ease;
@@ -429,7 +429,7 @@ kbd {
   width: 0%;
   background: var(--neon-orange);
   border-radius: 4px;
-  box-shadow: 0 0 8px rgba(255, 140, 31, 0.8);
+  box-shadow: 0 0 8px rgba(64, 178, 255, 0.8);
 }
 
 /* Paint picker swatches */
@@ -473,11 +473,11 @@ kbd {
   width: 0%;
   border-radius: 6px;
   background: var(--neon-orange);
-  box-shadow: 0 0 12px rgba(255, 140, 31, 0.6);
+  box-shadow: 0 0 12px rgba(64, 178, 255, 0.6);
   transition: width 0.1s linear;
 }
 .speedo-num { display: block; text-align: center; font-family: var(--font-title); font-weight: 700; margin-top: 5px; }
-.speedo-num span { font-size: 24px; color: #fff; text-shadow: 0 0 12px rgba(255, 140, 31, 0.4); }
+.speedo-num span { font-size: 24px; color: #fff; text-shadow: 0 0 12px rgba(64, 178, 255, 0.4); }
 .speedo-num em { font-style: normal; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; }
 
 /* Gun charge */
@@ -489,7 +489,7 @@ kbd {
   width: 100%;
   border-radius: 6px;
   background: var(--neon-orange);
-  box-shadow: 0 0 12px rgba(255, 140, 31, 0.6);
+  box-shadow: 0 0 12px rgba(64, 178, 255, 0.6);
   transition: width 0.08s linear;
 }
 
@@ -564,37 +564,44 @@ body.touch .hud-hints { display: none; }
   font-size: 26px;
   color: var(--text-main);
   background: rgba(40, 24, 10, 0.55);
-  border: 2px solid rgba(255, 140, 31, 0.5);
+  border: 2px solid rgba(64, 178, 255, 0.5);
   backdrop-filter: blur(4px);
   cursor: pointer;
   touch-action: none;
   transition: transform 0.08s ease, background 0.15s ease;
 }
-.tbtn:active { transform: scale(0.9); background: rgba(255, 140, 31, 0.28); }
+.tbtn:active { transform: scale(0.9); background: rgba(64, 178, 255, 0.28); }
 .tbtn-fire {
   position: absolute; right: 18px; bottom: calc(104px + env(safe-area-inset-bottom));
   width: 88px; height: 88px;
   font-size: 34px;
-  border-color: rgba(255, 140, 31, 0.7);
-  background: rgba(70, 34, 8, 0.55);
+  border-color: rgba(64, 178, 255, 0.7);
+  background: rgba(10, 22, 45, 0.55);
 }
-.tbtn-fire:active { background: rgba(255, 140, 31, 0.42); }
+.tbtn-fire:active { background: rgba(64, 178, 255, 0.42); }
 .tbtn-gaspedal {
   position: absolute; right: calc(120px + env(safe-area-inset-right)); bottom: calc(104px + env(safe-area-inset-bottom));
-  border-color: rgba(255, 210, 61, 0.55);
+  border-color: rgba(120, 224, 255, 0.55);
 }
-.tbtn-gaspedal:active { background: rgba(255, 210, 61, 0.28); }
+.tbtn-gaspedal:active { background: rgba(120, 224, 255, 0.28); }
+.tbtn-brake {
+  position: absolute; left: calc(96px + env(safe-area-inset-left)); bottom: calc(104px + env(safe-area-inset-bottom));
+  width: 64px; height: 64px;
+  border-color: rgba(120, 224, 255, 0.55);
+  background: rgba(10, 22, 45, 0.55);
+}
+.tbtn-brake:active { background: rgba(120, 224, 255, 0.3); }
 .tbtn-drift {
   position: absolute; left: 18px; bottom: calc(202px + env(safe-area-inset-bottom));
   width: 64px; height: 64px;
-  border-color: rgba(255, 140, 31, 0.5);
-  background: rgba(40, 24, 10, 0.5);
+  border-color: rgba(64, 178, 255, 0.5);
+  background: rgba(10, 22, 45, 0.5);
 }
-.tbtn-drift:active { background: rgba(255, 140, 31, 0.3); }
+.tbtn-drift:active { background: rgba(64, 178, 255, 0.3); }
 .tbtn.on {
-  background: rgba(255, 210, 61, 0.3);
-  border-color: rgba(255, 210, 61, 0.9);
-  box-shadow: 0 0 18px rgba(255, 210, 61, 0.5);
+  background: rgba(120, 224, 255, 0.3);
+  border-color: rgba(120, 224, 255, 0.9);
+  box-shadow: 0 0 18px rgba(120, 224, 255, 0.5);
 }
 
 /* Small screens: hide hints that clutter */
@@ -608,6 +615,7 @@ body.touch .hud-hints { display: none; }
   .tbtn { width: 64px; height: 64px; font-size: 22px; }
   .tbtn-fire { width: 76px; height: 76px; font-size: 30px; }
   .tbtn-gaspedal { width: 58px; height: 58px; }
+  .tbtn-brake { width: 56px; height: 56px; }
   .tbtn-drift { width: 54px; height: 54px; bottom: calc(186px + env(safe-area-inset-bottom)); left: 14px; }
 }
 
