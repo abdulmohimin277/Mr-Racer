@@ -29,7 +29,9 @@ html, body {
   color: var(--text-main);
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
   touch-action: none;
+  overscroll-behavior: none;
 }
 
 #game-root, #game-root canvas { position: fixed; inset: 0; display: block; }
@@ -170,6 +172,17 @@ html, body {
   color: #1a0c00;
   background: var(--neon-orange);
   box-shadow: 0 4px 16px rgba(255, 140, 31, 0.4);
+}
+
+/* Car selector — color swatch buttons */
+.seg-cars { flex-wrap: wrap; justify-content: center; }
+.car-btn { display: flex; align-items: center; gap: 7px; padding: 8px 11px; }
+.swatch {
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
 }
 
 .menu-foot { margin-top: 22px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
@@ -314,7 +327,7 @@ kbd {
 
 .hud-top {
   position: absolute;
-  top: 16px;
+  top: calc(12px + env(safe-area-inset-top));
   left: 20px;
   right: 20px;
   display: flex;
@@ -351,11 +364,30 @@ kbd {
 .hud-coins { color: var(--neon-yellow) !important; text-shadow: 0 0 12px rgba(255, 210, 61, 0.6) !important; }
 .hud-center { min-width: 130px; }
 
+/* Touch pause button (lives inside the HUD top row, shown on touch devices) */
+.touch-pause {
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 92px;
+  font-family: var(--font-title);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--neon-orange);
+  text-shadow: 0 0 10px rgba(255, 140, 31, 0.5);
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+.touch-pause:active { transform: scale(0.92); background: rgba(255, 140, 31, 0.25); }
+
 .hud-mid {
   position: absolute;
   left: 20px;
   right: 20px;
-  bottom: 18px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -419,6 +451,7 @@ kbd {
   font-family: var(--font-title);
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
 }
+body.touch .hud-hints { display: none; }
 
 /* Floating score texts */
 #float-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -470,10 +503,10 @@ kbd {
   z-index: 25;
   pointer-events: none;
 }
-#touch-controls .touch-btns { position: absolute; bottom: 120px; left: 24px; display: flex; gap: 14px; }
+#touch-controls .touch-btns { position: absolute; bottom: calc(104px + env(safe-area-inset-bottom)); left: 18px; display: flex; gap: 14px; }
 .tbtn {
   pointer-events: auto;
-  width: 74px; height: 74px;
+  width: 78px; height: 78px;
   border-radius: 50%;
   font-size: 26px;
   color: var(--text-main);
@@ -486,17 +519,30 @@ kbd {
 }
 .tbtn:active { transform: scale(0.9); background: rgba(255, 140, 31, 0.28); }
 .tbtn-fire {
-  position: absolute; right: 26px; bottom: 150px;
-  font-size: 30px;
+  position: absolute; right: 18px; bottom: calc(104px + env(safe-area-inset-bottom));
+  width: 88px; height: 88px;
+  font-size: 34px;
   border-color: rgba(255, 140, 31, 0.7);
   background: rgba(70, 34, 8, 0.55);
 }
 .tbtn-fire:active { background: rgba(255, 140, 31, 0.42); }
 .tbtn-gaspedal {
-  position: absolute; right: 26px; bottom: 260px;
+  position: absolute; right: calc(120px + env(safe-area-inset-right)); bottom: calc(104px + env(safe-area-inset-bottom));
   border-color: rgba(255, 210, 61, 0.55);
 }
 .tbtn-gaspedal:active { background: rgba(255, 210, 61, 0.28); }
+.tbtn-drift {
+  position: absolute; left: 18px; bottom: calc(202px + env(safe-area-inset-bottom));
+  width: 64px; height: 64px;
+  border-color: rgba(255, 140, 31, 0.5);
+  background: rgba(40, 24, 10, 0.5);
+}
+.tbtn-drift:active { background: rgba(255, 140, 31, 0.3); }
+.tbtn.on {
+  background: rgba(255, 210, 61, 0.3);
+  border-color: rgba(255, 210, 61, 0.9);
+  box-shadow: 0 0 18px rgba(255, 210, 61, 0.5);
+}
 
 /* Small screens: hide hints that clutter */
 @media (max-width: 720px) {
@@ -505,4 +551,17 @@ kbd {
   .hud-panel { min-width: 84px; padding: 8px 12px; }
   .hud-panel span[id] { font-size: 17px; }
   .speedo { width: 46vw; }
+  #touch-controls .touch-btns { gap: 10px; }
+  .tbtn { width: 64px; height: 64px; font-size: 22px; }
+  .tbtn-fire { width: 76px; height: 76px; font-size: 30px; }
+  .tbtn-gaspedal { width: 58px; height: 58px; }
+  .tbtn-drift { width: 54px; height: 54px; bottom: calc(186px + env(safe-area-inset-bottom)); left: 14px; }
+}
+
+/* Tiny phone screens: keep the 4-panel HUD row compact */
+@media (max-width: 480px) {
+  .hud-top { gap: 6px; }
+  .hud-panel { min-width: 62px; padding: 6px 10px; border-radius: 10px; }
+  .hud-panel span[id] { font-size: 15px; }
+  .touch-pause { min-width: 58px; font-size: 9px; letter-spacing: 1px; }
 }

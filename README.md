@@ -7,9 +7,13 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 - **3D cars** — procedurally modelled sport racer (player), sedans and cargo trucks (traffic) with real-time shadows
 - **Designed highway** — 3-lane road with scrolling lane markings, rumble strips, guardrails with glowing orange strips,
   streetlights, trees, billboards, pylons, a lit skyline, mountains, clouds and a retro sliced sun over an orange dusk
-- **Obstacles** — traffic cars, trucks, striped barrels and cones. Avoid them… or blast them
+- **Obstacles** — traffic sedans &amp; cargo trucks, striped barrels, cones, **construction barriers**, **boulders** and **oil slicks** (slip hazard). Blast them or avoid them — trucks &amp; barriers take multiple hits
 - **Coins** — collect golden coin lines for bonus score (with sparkles & sounds)
 - **Guns** — twin nose blasters. Hold `SPACE` to fire; kills refund ammo; orange **+AMMO** pickups refill it
+- **Drifting** — hold `X` / `SHIFT` to slide, tighten corners and earn drift points (tyre smoke + skid sound)
+- **4 selectable cars** — pick your ride (EMBER GT, BLAZE X, NIGHT FANG, GOLD RUSH) in the main menu; choice is saved
+- **Day / night cycle** — the highway world rolls through DAY → SUNSET → NIGHT → SUNRISE on a loop (windows light up at night, neon strips burn brighter); lock it to **DAY** or **NIGHT** from the menu
+- **Busy traffic** — dense traffic with **convoys** (streams of cars in one lane) and side-by-side **wall formations** on harder difficulties
 - **Main menu** — START / HOW TO PLAY / difficulty selector (Easy, Medium, Hard) / sound toggle / best score
 - **HUD** — live score, coins, best, speedometer, gun-charge bar and 3 lives
 - **Game over & pause screens**, near-miss bonuses, crash damage vignette, floating score popups
@@ -24,10 +28,26 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 | `←` / `→` (or `A` / `D`) | Steer              |
 | `↑` / `W`         | Accelerate (hold)             |
 | `SPACE`           | Fire blasters (hold)          |
+| `X` / `SHIFT`     | Drift / slide (hold)          |
 | `P` / `ESC`       | Pause / resume                |
 | `R`               | Quick restart                 |
 | `M`               | Mute sound                    |
 | `N`               | Refill blaster charge         |
+
+## 📱 Mobile / touch
+
+The game is fully playable on phones & tablets — on-screen controls appear automatically:
+
+- **◀ ▶** — steer between lanes (hold)
+- **▲** — cruise control: tap once to accelerate, tap again to release (glows when active)
+- **🌀** — drift (hold)
+- **🎯** — fire the blasters (hold)
+- **⏸ PAUSE** — pause button in the HUD top row
+
+On touch devices the game automatically lowers the render quality (shadows, pixel ratio,
+antialiasing) and widens the camera FOV for portrait screens so you can still see the road ahead.
+Safe-area insets (notch / home bar) are respected. To test on your phone, run the server and open
+`http://<your-PC-LAN-IP>:8899` from the phone (same Wi-Fi).
 
 ## 🚀 How to run
 

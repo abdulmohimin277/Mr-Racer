@@ -30,6 +30,7 @@
         <span class="hud-label">BEST</span>
         <span id="hud-best">0</span>
       </div>
+      <button id="btn-touch-pause" class="hud-panel touch-pause hidden" aria-label="Pause">⏸&nbsp;PAUSE</button>
     </div>
     <div class="hud-mid">
       <div class="lives" id="hud-lives" title="Lives">
@@ -86,6 +87,29 @@
         </div>
 
         <button id="btn-howto" class="btn btn-ghost">ℹ&nbsp; HOW TO PLAY</button>
+
+        <div class="menu-row car-row">
+          <div class="diff-select" style="flex:1">
+            <span class="row-label">YOUR RIDE</span>
+            <div class="seg seg-cars" id="car-seg">
+              <button data-car="ember" class="seg-btn car-btn" title="EMBER GT"><span class="swatch" style="background:#ffc219"></span>EMBER</button>
+              <button data-car="blaze" class="seg-btn car-btn" title="BLAZE X"><span class="swatch" style="background:#ff3b10"></span>BLAZE</button>
+              <button data-car="shadow" class="seg-btn car-btn" title="NIGHT FANG"><span class="swatch" style="background:#39404f"></span>SHADOW</button>
+              <button data-car="gold" class="seg-btn car-btn" title="GOLD RUSH"><span class="swatch" style="background:#ffd23d"></span>GOLD</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-row">
+          <div class="diff-select" style="flex:1">
+            <span class="row-label">TIME OF DAY</span>
+            <div class="seg" id="time-seg">
+              <button data-time="cycle" class="seg-btn active">🔄 CYCLE</button>
+              <button data-time="day" class="seg-btn">☀️ DAY</button>
+              <button data-time="night" class="seg-btn">🌙 NIGHT</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="menu-foot">
@@ -102,10 +126,12 @@
       <div class="howto-grid">
         <div class="howto-item"><span class="key">←</span><span class="key">→</span><div><b>Steer</b><p>Move between lanes — also A / D</p></div></div>
         <div class="howto-item"><span class="key">↑</span><span class="key">W</span><div><b>Accelerate</b><p>Go faster, more distance = more score</p></div></div>
+        <div class="howto-item"><span class="key">X</span><span class="key">SHIFT</span><div><b>Drift</b><p>Hold to slide &amp; cut corners sharper. Earns drift points. Watch for oil slicks!</p></div></div>
         <div class="howto-item"><span class="key">SPACE</span><div><b>Blaster</b><p>Shoot traffic &amp; barriers. Kills refill your gun charge.</p></div></div>
         <div class="howto-item"><span class="key">P</span><span class="key">ESC</span><div><b>Pause</b><p>R = quick restart, M = mute, N = refill blaster</p></div></div>
         <div class="howto-item"><span class="coin-icon">⛁</span><div><b>Coins</b><p>Collect golden coins for bonus points.</p></div></div>
         <div class="howto-item"><span class="health-icon">♥</span><div><b>Lives</b><p>You have 3 lives. Collisions cost one.</p></div></div>
+        <div class="howto-item"><span class="coin-icon">👆</span><div><b>Touch</b><p>On phones/tablets use the on-screen buttons. Tap ▲ once to cruise, tap again to release.</p></div></div>
       </div>
       <button id="btn-howto-back" class="btn btn-ghost">←&nbsp; BACK</button>
     </div>
@@ -152,6 +178,7 @@
       <button class="tbtn" data-touch="left" aria-label="Left">◀</button>
       <button class="tbtn" data-touch="right" aria-label="Right">▶</button>
     </div>
+    <button class="tbtn tbtn-drift" data-touch="drift" aria-label="Drift">🌀</button>
     <button class="tbtn tbtn-fire" data-touch="fire" aria-label="Shoot">🎯</button>
     <button class="tbtn tbtn-gaspedal" data-touch="gas" aria-label="Accelerate">▲</button>
   </div>

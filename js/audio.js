@@ -161,6 +161,13 @@ const AudioFX = (() => {
       noise(0.2, 0.3, 1200);
       blip({ freq: 220, endFreq: 70, dur: 0.2, type: 'square', vol: 0.2 });
     },
+    skid() {
+      noise(0.22, 0.16, 2600, 'highpass');
+    },
+    oil() {
+      noise(0.3, 0.35, 350);
+      blip({ freq: 140, endFreq: 38, dur: 0.3, type: 'triangle', vol: 0.3 });
+    },
     ui() {
       blip({ freq: 700, endFreq: 1000, dur: 0.08, type: 'sine', vol: 0.15 });
     },

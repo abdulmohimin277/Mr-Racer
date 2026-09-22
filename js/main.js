@@ -12,7 +12,7 @@
   };
 
   // ---------- shared input state ----------
-  const input = { left: false, right: false, throttle: false, fire: false };
+  const input = { left: false, right: false, throttle: false, fire: false, drift: false };
   Game.setInput(input);
 
   let currentDiff = 'medium';
@@ -115,6 +115,48 @@
       soundBtn.textContent = on ? '🔊 ON' : '🔇 OFF';
       soundBtn.classList.toggle('active', on);
     });
+
+    // car selection
+    document.querySelectorAll('#car-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#car-seg .seg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        Game.setCar(btn.dataset.car);
+        try { localStorage.setItem('neonrush_car', btn.dataset.car); } catch (e) {}
+        AudioFX.sfx.ui();
+      });
+    });
+    restoreCar();
+
+    // time-of-day selector
+    document.querySelectorAll('#time-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#time-seg .seg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        Game.setTime(btn.dataset.time);
+        try { localStorage.setItem('neonrush_time', btn.dataset.time); } catch (e) {}
+        AudioFX.sfx.ui();
+      });
+    });
+    restoreTime();
+  }
+
+  function restoreCar() {
+    let car = 'ember';
+    try { car = localStorage.getItem('neonrush_car') || 'ember'; } catch (e) {}
+    Game.setCar(car);
+    document.querySelectorAll('#car-seg .seg-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.car === car);
+    });
+  }
+
+  function restoreTime() {
+    let t = 'cycle';
+    try { t = localStorage.getItem('neonrush_time') || 'cycle'; } catch (e) {}
+    Game.setTime(t);
+    document.querySelectorAll('#time-seg .seg-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.time === t);
+    });
   }
 
   /* ================= keyboard ================= */
@@ -123,6 +165,7 @@
       if (code === 'ArrowLeft' || code === 'KeyA') input.left = key;
       if (code === 'ArrowRight' || code === 'KeyD') input.right = key;
       if (code === 'ArrowUp' || code === 'KeyW') input.throttle = key;
+      if (code === 'KeyX' || code === 'ShiftLeft' || code === 'ShiftRight') input.drift = key;
       if (code === 'Space') { input.fire = key; if (key) AudioFX.ensure(); }
     };
 
@@ -174,7 +217,7 @@
 
     window.addEventListener('keyup', (e) => setKey(e.code, false));
     window.addEventListener('blur', () => {
-      input.left = input.right = input.throttle = input.fire = false;
+      input.left = input.right = input.throttle = input.fire = input.drift = false;
     });
   }
 
@@ -183,6 +226,7 @@
     const wrap = $('touch-controls');
     if (!touchMode) return;
     wrap.classList.remove('hidden');
+    if (document.body) document.body.classList.add('touch');
 
     const bind = (el, key) => {
       const press = (e) => { e.preventDefault(); input[key] = true; AudioFX.ensure(); };
@@ -193,7 +237,31 @@
       el.addEventListener('pointerleave', release);
       el.addEventListener('contextmenu', (e) => e.preventDefault());
     };
-    document.querySelectorAll('.tbtn').forEach((b) => bind(b, b.dataset.touch));
+    document.querySelectorAll('.tbtn').forEach((b) => {
+      if (b.dataset.touch === 'gas') {
+        // cruise toggle — tap once to accelerate, tap again to release
+        b.addEventListener('click', (e) => {
+          e.preventDefault();
+          input.throttle = !input.throttle;
+          b.classList.toggle('on', input.throttle);
+          AudioFX.ensure();
+        });
+      } else {
+        bind(b, b.dataset.touch);
+      }
+    });
+
+    // on-screen pause button
+    const pauseBtn = $('btn-touch-pause');
+    if (pauseBtn) {
+      pauseBtn.classList.remove('hidden');
+      pauseBtn.addEventListener('click', () => {
+        if (Game.state === 'playing') {
+          Game.pause();
+          showScreen('screen-pause');
+        }
+      });
+    }
   }
 
   /* ================= misc ================= */

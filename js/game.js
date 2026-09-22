@@ -6,10 +6,17 @@
 const Game = (() => {
   /* ---------------- config ---------------- */
   const DIFFS = {
-    easy:   { trafMax: 7,  maxSpeed: 56, spawnGap: [95, 150], coinGap: [26, 60],  barrelChance: 0.30 },
-    medium: { trafMax: 11, maxSpeed: 74, spawnGap: [70, 118], coinGap: [22, 50],  barrelChance: 0.34 },
-    hard:   { trafMax: 15, maxSpeed: 88, spawnGap: [52, 96],  coinGap: [18, 42],  barrelChance: 0.38 },
+    easy:   { trafMax: 11, maxSpeed: 62,  spawnGap: [58, 100], coinGap: [24, 52], laneGap: 170, duoChance: 0.15, convoyChance: 0.15, weights: [0.50, 0.12, 0.16, 0.12, 0.04, 0.03, 0.03] },
+    medium: { trafMax: 18, maxSpeed: 86,  spawnGap: [38, 72],  coinGap: [18, 42], laneGap: 120, duoChance: 0.40, convoyChance: 0.35, weights: [0.48, 0.14, 0.14, 0.10, 0.06, 0.04, 0.04] },
+    hard:   { trafMax: 26, maxSpeed: 106, spawnGap: [24, 44],  coinGap: [13, 32], laneGap: 85,  duoChance: 0.70, convoyChance: 0.50, weights: [0.46, 0.16, 0.12, 0.08, 0.06, 0.06, 0.06] },
   };
+
+  const CAR_OPTIONS = [
+    { id: 'ember',  name: 'EMBER GT',   color: 0xffc219, glow: 0xff6a00 },
+    { id: 'blaze',  name: 'BLAZE X',    color: 0xff3b10, glow: 0xff8c1f },
+    { id: 'shadow', name: 'NIGHT FANG', color: 0x39404f, glow: 0xff7a1a },
+    { id: 'gold',   name: 'GOLD RUSH',  color: 0xffd23d, glow: 0xffb347 },
+  ];
 
   const LANES = [-4.666, 0, 4.666];
   const ROAD_W = 14;
@@ -26,7 +33,16 @@ const Game = (() => {
   let renderer, scene, camera;
   let player = null;
   let neonLight = null;
-  let input = { left: false, right: false, throttle: false, fire: false };
+  let input = { left: false, right: false, throttle: false, fire: false, drift: false };
+
+  // day / night cycle
+  let timeSetting = 'cycle';          // cycle | day | night
+  let timeClock = 0;
+  let nightMixG = 0;
+  let skyPhase = -1;
+  let sunLight = null, hemiLight = null, fillLight = null;
+  let mountainMat = null;
+  const DAY_CYCLE = 96;               // seconds for one full day→night→day loop
 
   // run stats
   let speed = 0, elapsed = 0, distance = 0;
@@ -42,6 +58,8 @@ const Game = (() => {
   let sceneT = 0;
   // camera base per viewport/aspect (set by fitViewport)
   let camBase = { fov: 70, y: 6.6, z: 13.5 };
+  let carOpt = CAR_OPTIONS[0];
+  let oilT = 0, driftTime = 0, driftSmokeT = 0, driftScoreClock = 0;
 
   // scenery
   let sideSlots = [], skySlots = [], cloudSlots = [], streakSlots = [];
@@ -80,50 +98,121 @@ const Game = (() => {
     });
   }
 
-  /* ---------------- sky + fog ---------------- */
-  function makeSky() {
-    // flat solid orange dusk — no gradient colors
-    scene.background = canvasTex(2, 512, (ctx, w, h) => {
-      ctx.fillStyle = '#ff8c1f';
-      ctx.fillRect(0, 0, w, h);
+  /* ---------------- sky + fog (day/night cycle, flat colors only) ---------------- */
+  const SKY_PHASES = [
+    // 0 day   — bright warm orange, white-hot sun
+    { sky: '#ffab4e', sun: '#fff2cf', moon: false, cloud: 0xffffff, cloudOp: 0.55, mount: 0x9a6432 },
+    // 1 dusk  — classic orange sunset
+    { sky: '#ff8c1f', sun: '#ffd166', moon: false, cloud: 0xffb9d8, cloudOp: 0.42, mount: 0x3a2010 },
+    // 2 night — deep indigo, small moon + flat stars
+    { sky: '#14111e', sun: null,      moon: true, cloud: 0x3a2f5a, cloudOp: 0.16, mount: 0x1f1406 },
+    // 3 dawn  — golden sunrise
+    { sky: '#ffa24d', sun: '#fff0c5', moon: false, cloud: 0xffd9b8, cloudOp: 0.5,  mount: 0x7a4a1f },
+  ];
+  const FOG_DAY = 0xffb45e, FOG_NIGHT = 0x241b33;
 
-      // retro sliced sun — flat colors only
-      const sunX = w / 2, sunH = h * 0.30, sunY = h * 0.60, sunW = w * 0.62;
-      ctx.fillStyle = '#ffd166';
-      ctx.fillRect(sunX - sunW / 2, sunY - sunH, sunW, sunH * 2);
-      ctx.fillStyle = '#e8790f';
-      ctx.globalAlpha = 0.85;
-      for (let i = 0; i < 7; i++) {
-        const yy = sunY - sunH + (i + 0.4) * (sunH * 2 / 8);
-        ctx.fillRect(sunX - sunW / 2, yy, sunW, sunH * 0.16);
+  function drawSky(phase) {
+    const p = SKY_PHASES[phase];
+    return (ctx, w, h) => {
+      ctx.fillStyle = p.sky;
+      ctx.fillRect(0, 0, w, h);
+      if (p.moon) {
+        // small moon disc (night)
+        ctx.fillStyle = '#e8ecff';
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.26, w * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+        // flat stars — solid dots, no gradients
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 80; i++) {
+          ctx.globalAlpha = 0.3 + Math.random() * 0.7;
+          ctx.fillRect(Math.random() * w, Math.random() * h * 0.72, 1, 1);
+        }
+        ctx.globalAlpha = 1;
+      } else if (p.sun) {
+        // retro sliced sun — flat colors only
+        const sunX = w / 2, sunH = h * 0.30, sunY = h * 0.60, sunW = w * 0.62;
+        ctx.fillStyle = p.sun;
+        ctx.fillRect(sunX - sunW / 2, sunY - sunH, sunW, sunH * 2);
+        ctx.fillStyle = '#000000';
+        ctx.globalAlpha = 0.18;
+        for (let i = 0; i < 7; i++) {
+          const yy = sunY - sunH + (i + 0.4) * (sunH * 2 / 8);
+          ctx.fillRect(sunX - sunW / 2, yy, sunW, sunH * 0.16);
+        }
+        ctx.globalAlpha = 1;
       }
-      ctx.globalAlpha = 1;
-    });
-    scene.fog = new THREE.Fog(0xef7a12, 80, 300);
+    };
+  }
+
+  function updateDayNight() {
+    const cyc = timeSetting === 'day' ? 0
+      : timeSetting === 'night' ? 0.5
+      : (timeClock % DAY_CYCLE) / DAY_CYCLE;
+    const ang = cyc * Math.PI * 2;
+    const alt = Math.cos(ang);                                  // 1 = noon, -1 = midnight
+    const dayness = Math.max(0, Math.min(1, (alt + 0.35) / 0.7)); // smooth 1 (day) → 0 (night)
+    const nightMix = 1 - dayness;
+    nightMixG = nightMix;
+
+    // discrete sky look (rebuilt only when the phase changes)
+    let phase = timeSetting === 'day' ? 0
+      : timeSetting === 'night' ? 2
+      : alt > 0.3 ? 0 : alt < -0.3 ? 2 : (Math.sin(ang) < 0 ? 3 : 1);
+    if (phase !== skyPhase) {
+      skyPhase = phase;
+      scene.background = canvasTex(2, 512, drawSky(phase));
+      if (mountainMat) mountainMat.color = new THREE.Color(SKY_PHASES[phase].mount);
+    }
+
+    // smooth fog colour/density every frame (one tiny object)
+    const fR = (FOG_DAY >> 16) & 255, fG = (FOG_DAY >> 8) & 255, fB = FOG_DAY & 255;
+    const nR = (FOG_NIGHT >> 16) & 255, nG = (FOG_NIGHT >> 8) & 255, nB = FOG_NIGHT & 255;
+    const r = Math.round(fR + (nR - fR) * nightMix);
+    const g = Math.round(fG + (nG - fG) * nightMix);
+    const b = Math.round(fB + (nB - fB) * nightMix);
+    scene.fog = new THREE.Fog((r << 16) | (g << 8) | b, 120 - 70 * nightMix, 420 - 170 * nightMix);
+
+    // lights
+    if (sunLight) {
+      sunLight.intensity = 0.14 + dayness * 1.5;
+      hemiLight.intensity = 0.32 + dayness * 0.55;
+      fillLight.intensity = 0.08 + dayness * 0.32;
+    }
+
+    // windows glow at night, fade by day
+    for (const s of skySlots) s.mat.emissiveIntensity = 0.12 + 0.85 * nightMix;
+    // clouds lighten by day, darken at night
+    for (const c of cloudSlots) {
+      c.sprite.material.opacity = 0.14 + 0.4 * dayness;
+      c.sprite.material.color = new THREE.Color(SKY_PHASES[phase].cloud);
+    }
+    // neon road streaks burn bright at night, barely visible by day
+    for (const s of streakSlots) s.mesh.material.opacity = 0.04 + 0.26 * nightMix;
   }
 
   /* ---------------- lights ---------------- */
   function makeLights() {
-    const hemi = new THREE.HemisphereLight(0xffb066, 0x331a05, 0.75);
-    scene.add(hemi);
+    hemiLight = new THREE.HemisphereLight(0xffb066, 0x331a05, 0.75);
+    scene.add(hemiLight);
 
-    const sun = new THREE.DirectionalLight(0xffcaa0, 1.25);
-    sun.position.set(60, 90, -140);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(IS_MOBILE ? 1024 : 2048, IS_MOBILE ? 1024 : 2048);
-    sun.shadow.camera.left = -80;
-    sun.shadow.camera.right = 80;
-    sun.shadow.camera.top = 90;
-    sun.shadow.camera.bottom = -90;
-    sun.shadow.camera.near = 10;
-    sun.shadow.camera.far = 320;
-    sun.shadow.bias = -0.0006;
-    scene.add(sun);
-    scene.add(sun.target);
+    sunLight = new THREE.DirectionalLight(0xffcaa0, 1.25);
+    sunLight.position.set(60, 90, -140);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(IS_MOBILE ? 1024 : 2048, IS_MOBILE ? 1024 : 2048);
+    sunLight.shadow.camera.left = -80;
+    sunLight.shadow.camera.right = 80;
+    sunLight.shadow.camera.top = 90;
+    sunLight.shadow.camera.bottom = -90;
+    sunLight.shadow.camera.near = 10;
+    sunLight.shadow.camera.far = 320;
+    sunLight.shadow.bias = -0.0006;
+    scene.add(sunLight);
+    scene.add(sunLight.target);
 
-    const fill = new THREE.DirectionalLight(0xff9e45, 0.35);
-    fill.position.set(-50, 40, 60);
-    scene.add(fill);
+    fillLight = new THREE.DirectionalLight(0xff9e45, 0.35);
+    fillLight.position.set(-50, 40, 60);
+    scene.add(fillLight);
 
     // neon under-glow that follows the player
     neonLight = new THREE.PointLight(0xff7a1a, 22, 14, 2);
@@ -363,16 +452,16 @@ const Game = (() => {
       const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), mat);
       b.position.set((Math.random() < 0.5 ? -1 : 1) * (46 + Math.random() * 60), h / 2, 20 - Math.random() * 270);
       scene.add(b);
-      skySlots.push(b);
+      skySlots.push({ mesh: b, mat });
     }
   }
 
   function makeMountains() {
-    const mMat = new THREE.MeshStandardMaterial({ color: 0x1f1406, roughness: 1, flatShading: true });
+    mountainMat = new THREE.MeshStandardMaterial({ color: 0x1f1406, roughness: 1, flatShading: true });
     for (const side of [-1, 1]) {
       for (let i = 0; i < 4; i++) {
         const h = 30 + Math.random() * 55;
-        const cone = new THREE.Mesh(new THREE.ConeGeometry(26 + Math.random() * 22, h, 6), mMat);
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(26 + Math.random() * 22, h, 6), mountainMat);
         cone.position.set(side * (85 + Math.random() * 70), h / 2 - 1.5, -(30 + i * 34) - Math.random() * 14);
         scene.add(cone);
       }
@@ -488,46 +577,175 @@ const Game = (() => {
     return g;
   }
 
+  function makeOilSlick(x, z) {
+    const tex = canvasTex(128, 128, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(20,14,8,0)';
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 40; i++) {
+        ctx.fillStyle = `rgba(28,20,12,${0.16 + Math.random() * 0.22})`;
+        ctx.beginPath();
+        ctx.arc(Math.random() * w, Math.random() * h, 8 + Math.random() * 22, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.9, 1.9),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.92, depthWrite: false })
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(x, 0.03, z);
+    scene.add(m);
+    return m;
+  }
+
+  function makeBarrier(x, z) {
+    const g = new THREE.Group();
+    const panelTex = canvasTex(64, 64, (ctx, w, h) => {
+      ctx.fillStyle = '#f97316';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#f6f7fb';
+      for (let y = 0; y < h; y += 16) ctx.fillRect(0, y, w, 8);
+    });
+    const panel = new THREE.Mesh(
+      new THREE.BoxGeometry(3.1, 1.0, 0.22),
+      new THREE.MeshStandardMaterial({ map: panelTex, roughness: 0.6, metalness: 0.2 })
+    );
+    panel.position.y = 0.7;
+    panel.castShadow = true; panel.receiveShadow = true;
+    g.add(panel);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x39414f, metalness: 0.5, roughness: 0.6 });
+    for (const lx of [-1.15, 1.15]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.1, 0.5), legMat);
+      leg.position.set(lx, 0.42, 0);
+      leg.castShadow = true;
+      g.add(leg);
+    }
+    const lamp = new THREE.Mesh(
+      new THREE.BoxGeometry(2.6, 0.14, 0.16),
+      new THREE.MeshBasicMaterial({ color: 0xffd166 })
+    );
+    lamp.position.y = 1.34;
+    g.add(lamp);
+    g.position.set(x, 0, z);
+    scene.add(g);
+    return g;
+  }
+
+  function makeRock(x, z) {
+    const g = new THREE.Group();
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x4a4340, roughness: 0.95, flatShading: true });
+    const r1 = new THREE.Mesh(new THREE.OctahedronGeometry(0.62, 0), rockMat);
+    r1.scale.set(1.2, 0.8, 1);
+    r1.position.y = 0.45;
+    r1.rotation.x = 0.3; r1.rotation.y = 0.7; r1.rotation.z = 0.2;
+    r1.castShadow = true; r1.receiveShadow = true;
+    const r2 = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), rockMat);
+    r2.position.set(0.9, 0.35, -0.35);
+    r2.rotation.x = 0.9; r2.rotation.y = 0.2; r2.rotation.z = 0.5;
+    r2.castShadow = true; r2.receiveShadow = true;
+    const r3 = new THREE.Mesh(new THREE.OctahedronGeometry(0.38, 0), rockMat);
+    r3.position.set(-0.75, 0.3, 0.4);
+    r3.rotation.x = 0.4; r3.rotation.y = 1.2; r3.rotation.z = 0.1;
+    r3.castShadow = true; r3.receiveShadow = true;
+    g.add(r1, r2, r3);
+    g.position.set(x, 0, z);
+    scene.add(g);
+    return g;
+  }
+
   const obstacleTypes = {
-    car:    { halfW: 1.0,  halfL: 2.4, value: 150, vc: true },
-    truck:  { halfW: 1.15, halfL: 3.2, value: 250, vc: true },
-    barrel: { halfW: 0.8,  halfL: 0.8, value: 100, vc: false },
-    cone:   { halfW: 0.55, halfL: 0.55, value: 50, vc: false },
+    car:     { halfW: 1.0,  halfL: 2.4, value: 150, vc: true,  hp: 1 },
+    truck:   { halfW: 1.15, halfL: 3.2, value: 250, vc: true,  hp: 2 },
+    barrel:  { halfW: 0.8,  halfL: 0.8, value: 100, vc: false, hp: 1 },
+    cone:    { halfW: 0.55, halfL: 0.55, value: 50, vc: false, hp: 1 },
+    barrier: { halfW: 1.52, halfL: 0.9, value: 200, vc: false, hp: 2 },
+    rock:    { halfW: 0.95, halfL: 0.95, value: 80, vc: false, hp: 1 },
+    oil:     { halfW: 0.95, halfL: 1.0,  value: 0,  vc: false, hp: 0, solid: false },
   };
 
-  function spawnObstacle() {
-    // pick a lane whose spawn cooldown has elapsed
-    const ready = [0, 1, 2].filter((L) => laneCooldown[L] <= 0);
-    if (ready.length === 0) return;
-    const lane = ready[(Math.random() * ready.length) | 0];
+  const OBSTACLE_TYPES = ['car', 'truck', 'barrel', 'cone', 'rock', 'barrier', 'oil'];
 
-    const x = LANES[lane] + (Math.random() - 0.5) * 0.6;
-    let type, mesh;
-    if (Math.random() < diff.barrelChance) {
-      type = Math.random() < 0.6 ? 'barrel' : 'cone';
-      mesh = type === 'barrel' ? makeBarrel(x, SPAWN_Z) : makeCone(x, SPAWN_Z);
+  function pickObstacleType() {
+    const w = diff.weights || [0.40, 0.10, 0.22, 0.14, 0.06, 0.04, 0.04];
+    let r = Math.random();
+    for (let i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0) return OBSTACLE_TYPES[i]; }
+    return 'car';
+  }
+
+  function makeObstacleEnt(type, x) {
+    let mesh;
+    if (type === 'barrel') {
+      mesh = makeBarrel(x, SPAWN_Z);
+    } else if (type === 'cone') {
+      mesh = makeCone(x, SPAWN_Z);
+    } else if (type === 'barrier') {
+      mesh = makeBarrier(x, SPAWN_Z);
+    } else if (type === 'rock') {
+      mesh = makeRock(x, SPAWN_Z);
+    } else if (type === 'oil') {
+      mesh = makeOilSlick(x, SPAWN_Z);
     } else {
-      if (Math.random() < 0.18) {
-        type = 'truck';
-        mesh = CarBuilder.buildTruck(new THREE.Color().setHSL(Math.random(), 0.5, 0.35).getHex());
-      } else {
-        type = 'car';
-        mesh = CarBuilder.buildTraffic();
-      }
+      mesh = type === 'truck'
+        ? CarBuilder.buildTruck(new THREE.Color().setHSL(Math.random(), 0.5, 0.35).getHex())
+        : CarBuilder.buildTraffic();
       mesh.rotation.y = Math.PI;      // nose points forward (-z)
       mesh.position.set(x, 0, SPAWN_Z);
       mesh.traverse((o) => { if (o.isMesh) o.castShadow = true; });
       scene.add(mesh);
     }
     const info = obstacleTypes[type];
-    const ent = {
+    return {
       type, mesh, x, z: SPAWN_Z,
       halfW: info.halfW, halfL: info.halfL, value: info.value,
       vc: info.vc ? 9 + Math.random() * 10 : 0,
+      hp: info.hp,
+      solid: info.solid !== false,
       alive: true, passed: false,
     };
-    obstacles.push(ent);
-    laneCooldown[lane] = 220 + Math.random() * 190;
+  }
+
+  function spawnObstacle() {
+    // difficulty caps how much can pile up on the road at once
+    if (obstacles.length >= diff.trafMax) return;
+    const ready = [0, 1, 2].filter((L) => laneCooldown[L] <= 0);
+    if (ready.length === 0) return;
+
+    const addAt = (L, zOffset, forceType) => {
+      if (obstacles.length >= diff.trafMax) return null;
+      const x = LANES[L] + (Math.random() - 0.5) * 0.6;
+      const ent = makeObstacleEnt(forceType || pickObstacleType(), x);
+      if (zOffset) {
+        ent.z = SPAWN_Z - zOffset;
+        ent.mesh.position.z = ent.z;
+      }
+      obstacles.push(ent);
+      return ent;
+    };
+
+    const lane = ready[(Math.random() * ready.length) | 0];
+    const first = addAt(lane, 0);
+    laneCooldown[lane] = diff.laneGap + Math.random() * 120;
+
+    // convoy: a stream of extra vehicles right behind in the SAME lane — busy highway
+    if (first && (first.type === 'car' || first.type === 'truck') && Math.random() < diff.convoyChance) {
+      const n = 1 + ((Math.random() * 2) | 0);          // 1-2 extra cars
+      const followType = Math.random() < 0.8 ? 'car' : 'truck';
+      let zOff = 13 + Math.random() * 9;
+      for (let k = 0; k < n; k++) {
+        addAt(lane, zOff, followType);
+        zOff += 11 + Math.random() * 8;
+      }
+    }
+
+    // wall formation in a different lane
+    if (Math.random() < diff.duoChance) {
+      const others = [0, 1, 2].filter((L) => L !== lane && laneCooldown[L] <= 0);
+      if (others.length) {
+        const lane2 = others[(Math.random() * others.length) | 0];
+        addAt(lane2, 0, Math.random() < 0.72 ? 'car' : 'truck');
+        laneCooldown[lane2] = diff.laneGap + Math.random() * 120;
+      }
+    }
   }
 
   function spawnCoinLine() {
@@ -556,7 +774,7 @@ const Game = (() => {
 
   /* ---------------- player ---------------- */
   function makePlayer() {
-    const g = CarBuilder.buildSport(0xffc219, { underglow: 0xff6a00 });
+    const g = CarBuilder.buildSport(carOpt.color, { underglow: carOpt.glow });
     const barMat = new THREE.MeshStandardMaterial({ color: 0x2a1a06, metalness: 0.85, roughness: 0.3 });
     for (const bx of [-0.55, 0.55]) {
       const b = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.5, 10), barMat);
@@ -568,7 +786,21 @@ const Game = (() => {
     g.rotation.y = Math.PI;
     g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     scene.add(g);
-    player = { group: g, x: 0, vx: 0, steer: 0 };
+    player = { group: g, x: 0, vx: 0, steer: 0, skid: 0 };
+  }
+
+  function rebuildPlayer() {
+    if (!player) return;
+    scene.remove(player.group);
+    makePlayer();
+    player.x = 0;
+  }
+
+  function setCar(id) {
+    const opt = CAR_OPTIONS.find((c) => c.id === id) || CAR_OPTIONS[0];
+    if (opt === carOpt) return;
+    carOpt = opt;
+    rebuildPlayer();
   }
 
   /* ---------------- HUD ---------------- */
@@ -602,8 +834,11 @@ const Game = (() => {
     diff = DIFFS[diffKey] || DIFFS.medium;
     state = 'playing';
     speed = 24; elapsed = 0; distance = 0;
+    timeClock = 0;                       // every race starts at bright day, then the cycle rolls on
+    skyPhase = -1;
     score = 0; coins = 0; kills = 0;
     lives = GAME_LIVES; invuln = 1.2; shake = 0; dyingTimer = 0;
+    oilT = 0; driftTime = 0; driftSmokeT = 0; driftScoreClock = 0;
     ammo = MAX_AMMO; fireCooldown = 0;
     nextSpawn = 10; nextCoinSpawn = 4;
     laneCooldown = [0, 0, 0];
@@ -669,6 +904,34 @@ const Game = (() => {
       FloatTexts.show('+' + ent.value, '#ffb347', pos.clone().setY(3), camera);
     }
     scene.remove(ent.mesh);
+  }
+
+  /* solid obstacles with HP take multiple shots; non-mortal hits chip points off */
+  function hitObstacle(ent) {
+    ent.hp = (ent.hp || 1) - 1;
+    if (ent.hp > 0) {
+      const p = ent.mesh.position.clone().setY(0.8);
+      Particles.burst(p, [0xffe0b0, 0xff9a2e, 0xffffff], 8, 2.2, 0);
+      AudioFX.sfx.hit();
+      score += Math.round(ent.value * 0.1);
+      FloatTexts.show('+' + Math.round(ent.value * 0.1), '#ffd23d', p.setY(3), camera);
+    } else {
+      destroyObstacle(ent, false);
+    }
+  }
+
+  /* oil slick — no crash, just a nasty loss of grip */
+  function triggerOilSlick(ent) {
+    ent.alive = false;
+    ent.mesh.visible = false;
+    oilT = 1.15;
+    shake = Math.max(shake, 0.4);
+    speed = Math.max(12, speed * 0.62);
+    const p = ent.mesh.position.clone().setY(0.3);
+    Particles.burst(p, [0xffd23d, 0xff5e3d, 0xffffff], 10, 2.5, 0);
+    Smoke.emit(ent.mesh.position.clone().setY(0.2), new THREE.Vector3(0, 1.5, 3), 6);
+    AudioFX.sfx.oil();
+    FloatTexts.show('SLICK!', '#ffd23d', ent.mesh.position.clone().setY(3), camera);
   }
 
   function crash(ent) {
@@ -751,17 +1014,49 @@ const Game = (() => {
     distance += speed * dt;
     score += speed * dt * 3 + dt * 8;
 
+    /* --- drift state --- */
+    const drifting = Boolean(input.drift) && speed > 18;
+    if (drifting) {
+      driftTime += dt;
+      driftScoreClock += dt;
+      while (driftScoreClock > 0.25) { driftScoreClock -= 0.25; score += 6; }
+      // tyre smoke from the rear wheels
+      driftSmokeT -= dt;
+      if (driftSmokeT <= 0) {
+        driftSmokeT = 0.075;
+        Smoke.emit(new THREE.Vector3(player.x - 0.75, 0.35, PLAYER_Z - 1.8), new THREE.Vector3(0, 0.8, 2), 1);
+        Smoke.emit(new THREE.Vector3(player.x + 0.75, 0.35, PLAYER_Z - 1.8), new THREE.Vector3(0, 0.8, 2), 1);
+        AudioFX.sfx.skid();
+      }
+    } else {
+      driftTime = 0;
+    }
+
     /* --- speed --- */
     const rampMax = Math.min(diff.maxSpeed, 30 + elapsed * (diff.maxSpeed - 30) / 45);
-    const effMax = input.throttle ? rampMax : rampMax * 0.46;
+    let effMax = input.throttle ? rampMax : rampMax * 0.46;
+    if (drifting) effMax = Math.min(rampMax, effMax + 10);   // drift boost
     speed = speed < effMax
       ? Math.min(effMax, speed + 26 * dt)
       : Math.max(effMax, speed - 22 * dt);
+    if (oilT > 0) {                     // oil slick bleeds speed
+      oilT -= dt;
+      speed = Math.max(12, speed * (1 - 0.62 * dt));
+    }
 
     /* --- steering --- */
-    const steerInput = (input.left ? -1 : 0) + (input.right ? 1 : 0);
-    const steerSpeed = Math.min(21, 11.5 + speed * 0.055);
+    const slickGrip = oilT > 0 ? 0.35 : 1;   // slippery when oily
+    const steerInput = ((input.left ? -1 : 0) + (input.right ? 1 : 0)) * slickGrip;
+    const driftF = drifting ? 1.9 : 1;       // drifting turns sharper
+    const steerSpeed = Math.min(drifting ? 25 : 21, (11.5 + speed * 0.055) * driftF);
     player.x += steerInput * steerSpeed * dt;
+    if (drifting) {
+      // rear wheels lose grip — extra lateral slide
+      player.x += steerInput * 6.5 * dt;
+      player.skid += (steerInput * 3.5 - player.skid) * Math.min(1, dt * 9);
+    } else {
+      player.skid += (0 - player.skid) * Math.min(1, dt * 9);
+    }
     const lim = ROAD_W / 2 - 1.05;
     player.x = Math.max(-lim, Math.min(lim, player.x));
     player.steer += (steerInput * 0.22 - player.steer) * Math.min(1, dt * 8);
@@ -772,12 +1067,12 @@ const Game = (() => {
     player.group.position.x = player.x;
     player.group.position.y = bob;
     player.group.position.z = PLAYER_Z;
-    player.group.rotation.z = -player.steer - player.vx * 0.004;
+    player.group.rotation.z = -player.steer - player.vx * 0.004 - player.skid * 0.09;
     player.group.rotation.x = -0.015 - (speed / diff.maxSpeed) * 0.05;
     if (neonLight) {
       neonLight.position.x = player.x * 0.6;
       neonLight.position.z = PLAYER_Z - 2;
-      neonLight.intensity = 14 + speed * 0.25;
+      neonLight.intensity = (6 + 16 * nightMixG) + speed * 0.25 * (0.5 + 0.5 * nightMixG);
     }
 
     /* --- invulnerability blink --- */
@@ -825,9 +1120,14 @@ const Game = (() => {
         }
       }
       if (collidesPlayer(o)) {
-        crash(o);
-        if (!o.alive) {
-          obstacles.splice(i, 1);   // the crash destroyed it
+        if (o.type === 'oil' && !o.solid) {
+          triggerOilSlick(o);
+          obstacles.splice(i, 1);
+        } else {
+          crash(o);
+          if (!o.alive) {
+            obstacles.splice(i, 1);   // the crash destroyed it
+          }
         }
       }
     }
@@ -872,10 +1172,10 @@ const Game = (() => {
     Bolts.update(dt, speed);
     for (const b of Bolts.allActive()) {
       for (const o of obstacles) {
-        if (!o.alive) continue;
+        if (!o.alive || !o.solid) continue;
         if (Math.abs(o.x - b.x) < o.halfW + 0.5 && Math.abs(o.z - b.z) < 2.8) {
           Bolts.hit(b);
-          destroyObstacle(o, false);
+          hitObstacle(o);
           break;
         }
       }
@@ -897,9 +1197,9 @@ const Game = (() => {
         if (s.z > 24) wrapProp(s);
       }
     }
-    for (const b of skySlots) {
-      b.position.z += scroll * 0.55;
-      if (b.position.z > 24) b.position.z -= 296;
+    for (const s of skySlots) {
+      s.mesh.position.z += scroll * 0.55;
+      if (s.mesh.position.z > 24) s.mesh.position.z -= 296;
     }
     for (const c of cloudSlots) {
       c.sprite.position.x += c.drift * dt;
@@ -921,7 +1221,7 @@ const Game = (() => {
     camera.position.z += (camBase.z + speed * 0.012 - camera.position.z) * k;
     camera.lookAt(lookX, 1.15, -3);
 
-    const targetFov = camBase.fov + (speed / diff.maxSpeed) * 12;
+    const targetFov = camBase.fov + (speed / diff.maxSpeed) * 12 + (drifting ? 3.5 : 0);
     if (Math.abs(camera.fov - targetFov) > 0.05) {
       camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 4);
       camera.updateProjectionMatrix();
@@ -951,6 +1251,11 @@ const Game = (() => {
     let dt = (now - lastTime) / 1000;
     lastTime = now;
     if (dt > 0.05) dt = 0.05;
+
+    if (state === 'playing' || state === 'dying' || state === 'idle') {
+      timeClock += dt;
+      updateDayNight();
+    }
 
     if (state === 'playing' || state === 'dying') {
       update(dt);
@@ -999,7 +1304,7 @@ const Game = (() => {
     camera.position.set(0, camBase.y, camBase.z);
     camera.lookAt(0, 1.15, -3);
 
-    makeSky();
+    updateDayNight();                  // paint sky + fog first (lights not ready yet)
     makeLights();
     makeRoad();
     makeSideSlots();
@@ -1007,6 +1312,7 @@ const Game = (() => {
     makeMountains();
     makeClouds();
     makeStreaks();
+    updateDayNight();                  // re-paint with lights + scenery for the current time of day
     makePlayer();
 
     Bolts.init(scene);
@@ -1043,6 +1349,12 @@ const Game = (() => {
 
   function setInput(obj) { input = obj; }
   function refillAmmo() { ammo = MAX_AMMO; }
+  function setTime(setting) {
+    if (setting === 'day' || setting === 'night' || setting === 'cycle') {
+      timeSetting = setting;
+      skyPhase = -1;            // repaint the sky on the next frame
+    }
+  }
 
   return {
     init,
@@ -1053,7 +1365,10 @@ const Game = (() => {
     saveBest,
     bestScore,
     setInput,
+    setCar,
+    setTime,
     refillAmmo,
+    CAR_OPTIONS,
     get state() { return state; },
     set onGameOver(fn) { onGameOverCb = fn; },
     set onFirstFrame(fn) { onFirstFrameCb = fn; },
