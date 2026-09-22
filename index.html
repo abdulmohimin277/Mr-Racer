@@ -30,6 +30,7 @@
         <span class="hud-label">BEST</span>
         <span id="hud-best">0</span>
       </div>
+      <button id="btn-touch-cam" class="hud-panel touch-pause touch-cam hidden" aria-label="Change camera view">📷&nbsp;VIEW</button>
       <button id="btn-touch-pause" class="hud-panel touch-pause hidden" aria-label="Pause">⏸&nbsp;PAUSE</button>
     </div>
     <div class="hud-mid">
@@ -104,8 +105,8 @@
           <div class="diff-select" style="flex:1">
             <span class="row-label">TIME OF DAY</span>
             <div class="seg" id="time-seg">
-              <button data-time="cycle" class="seg-btn active">🔄 CYCLE</button>
-              <button data-time="day" class="seg-btn">☀️ DAY</button>
+              <button data-time="day" class="seg-btn active">☀️ DAY</button>
+              <button data-time="cycle" class="seg-btn">🔄 CYCLE</button>
               <button data-time="night" class="seg-btn">🌙 NIGHT</button>
             </div>
           </div>
@@ -128,6 +129,7 @@
         <div class="howto-item"><span class="key">↑</span><span class="key">W</span><div><b>Accelerate</b><p>Go faster, more distance = more score</p></div></div>
         <div class="howto-item"><span class="key">X</span><span class="key">SHIFT</span><div><b>Drift</b><p>Hold to slide &amp; cut corners sharper. Earns drift points. Watch for oil slicks!</p></div></div>
         <div class="howto-item"><span class="key">SPACE</span><div><b>Blaster</b><p>Shoot traffic &amp; barriers. Kills refill your gun charge.</p></div></div>
+        <div class="howto-item"><span class="key">C</span><div><b>Cockpit view</b><p>Toggle the in-car dashboard &amp; steering wheel. On touch devices use 📷 VIEW.</p></div></div>
         <div class="howto-item"><span class="key">P</span><span class="key">ESC</span><div><b>Pause</b><p>R = quick restart, M = mute, N = refill blaster</p></div></div>
         <div class="howto-item"><span class="coin-icon">⛁</span><div><b>Coins</b><p>Collect golden coins for bonus points.</p></div></div>
         <div class="howto-item"><span class="health-icon">♥</span><div><b>Lives</b><p>You have 3 lives. Collisions cost one.</p></div></div>

@@ -151,8 +151,8 @@
   }
 
   function restoreTime() {
-    let t = 'cycle';
-    try { t = localStorage.getItem('neonrush_time') || 'cycle'; } catch (e) {}
+    let t = 'day';
+    try { t = localStorage.getItem('neonrush_time') || 'day'; } catch (e) {}
     Game.setTime(t);
     document.querySelectorAll('#time-seg .seg-btn').forEach((b) => {
       b.classList.toggle('active', b.dataset.time === t);
@@ -206,6 +206,9 @@
           break;
         case 'KeyN':
           Game.refillAmmo();
+          break;
+        case 'KeyC':
+          Game.toggleCam();
           break;
         case 'Enter':
           if (Game.state !== 'playing' && Game.state !== 'dying') {
@@ -261,6 +264,12 @@
           showScreen('screen-pause');
         }
       });
+    }
+    // on-screen camera toggle (chase ↔ cockpit)
+    const camBtn = $('btn-touch-cam');
+    if (camBtn) {
+      camBtn.classList.remove('hidden');
+      camBtn.addEventListener('click', () => Game.toggleCam());
     }
   }
 

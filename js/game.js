@@ -36,7 +36,7 @@ const Game = (() => {
   let input = { left: false, right: false, throttle: false, fire: false, drift: false };
 
   // day / night cycle
-  let timeSetting = 'cycle';          // cycle | day | night
+  let timeSetting = 'day';            // day | cycle | night (day is the default theme)
   let timeClock = 0;
   let nightMixG = 0;
   let skyPhase = -1;
@@ -60,6 +60,10 @@ const Game = (() => {
   let camBase = { fov: 70, y: 6.6, z: 13.5 };
   let carOpt = CAR_OPTIONS[0];
   let oilT = 0, driftTime = 0, driftSmokeT = 0, driftScoreClock = 0;
+
+  // cockpit (in-car) view
+  let camMode = 'chase';                  // chase | cockpit
+  let cockpit = null, cockpitWheel = null, cockpitNeedlePivot = null;
 
   // scenery
   let sideSlots = [], skySlots = [], cloudSlots = [], streakSlots = [];
@@ -100,14 +104,14 @@ const Game = (() => {
 
   /* ---------------- sky + fog (day/night cycle, flat colors only) ---------------- */
   const SKY_PHASES = [
-    // 0 day   — bright warm orange, white-hot sun
-    { sky: '#ffab4e', sun: '#fff2cf', moon: false, cloud: 0xffffff, cloudOp: 0.55, mount: 0x9a6432 },
+    // 0 day   — bright warm orange day, big sliced sun with rays
+    { sky: '#ffc46a', sun: '#fff6d8', rays: '#ffb031', moon: false, cloud: 0xffffff, cloudOp: 0.6,  mount: 0xa86f3a },
     // 1 dusk  — classic orange sunset
-    { sky: '#ff8c1f', sun: '#ffd166', moon: false, cloud: 0xffb9d8, cloudOp: 0.42, mount: 0x3a2010 },
+    { sky: '#ff8c1f', sun: '#ffd166', rays: null,      moon: false, cloud: 0xffb9d8, cloudOp: 0.42, mount: 0x3a2010 },
     // 2 night — deep indigo, small moon + flat stars
-    { sky: '#14111e', sun: null,      moon: true, cloud: 0x3a2f5a, cloudOp: 0.16, mount: 0x1f1406 },
+    { sky: '#14111e', sun: null,      rays: null,      moon: true,  cloud: 0x3a2f5a, cloudOp: 0.16, mount: 0x1f1406 },
     // 3 dawn  — golden sunrise
-    { sky: '#ffa24d', sun: '#fff0c5', moon: false, cloud: 0xffd9b8, cloudOp: 0.5,  mount: 0x7a4a1f },
+    { sky: '#ffa24d', sun: '#fff0c5', rays: null,      moon: false, cloud: 0xffd9b8, cloudOp: 0.5,  mount: 0x7a4a1f },
   ];
   const FOG_DAY = 0xffb45e, FOG_NIGHT = 0x241b33;
 
@@ -131,11 +135,28 @@ const Game = (() => {
         ctx.globalAlpha = 1;
       } else if (p.sun) {
         // retro sliced sun — flat colors only
-        const sunX = w / 2, sunH = h * 0.30, sunY = h * 0.60, sunW = w * 0.62;
+        const sunX = w / 2, sunH = h * 0.36, sunY = h * 0.58, sunW = w * 0.74;
+        // flat sun rays (day only)
+        if (p.rays) {
+          ctx.fillStyle = p.rays;
+          for (let i = 0; i < 12; i++) {
+            const a = (i / 12) * Math.PI * 2;
+            ctx.save();
+            ctx.translate(sunX, sunY);
+            ctx.rotate(a);
+            ctx.beginPath();
+            ctx.moveTo(sunW * 0.52, 0);
+            ctx.lineTo(sunW * 0.82, -sunW * 0.10);
+            ctx.lineTo(sunW * 0.82, sunW * 0.10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+        }
         ctx.fillStyle = p.sun;
         ctx.fillRect(sunX - sunW / 2, sunY - sunH, sunW, sunH * 2);
         ctx.fillStyle = '#000000';
-        ctx.globalAlpha = 0.18;
+        ctx.globalAlpha = 0.15;
         for (let i = 0; i < 7; i++) {
           const yy = sunY - sunH + (i + 0.4) * (sunH * 2 / 8);
           ctx.fillRect(sunX - sunW / 2, yy, sunW, sunH * 0.16);
@@ -175,9 +196,9 @@ const Game = (() => {
 
     // lights
     if (sunLight) {
-      sunLight.intensity = 0.14 + dayness * 1.5;
-      hemiLight.intensity = 0.32 + dayness * 0.55;
-      fillLight.intensity = 0.08 + dayness * 0.32;
+      sunLight.intensity = 0.18 + dayness * 1.7;
+      hemiLight.intensity = 0.34 + dayness * 0.6;
+      fillLight.intensity = 0.1 + dayness * 0.34;
     }
 
     // windows glow at night, fade by day
@@ -803,6 +824,135 @@ const Game = (() => {
     rebuildPlayer();
   }
 
+  /* ---------------- cockpit interior (dashboard + steering wheel) ---------------- */
+  function makeCockpit() {
+    const c = new THREE.Group();
+    const dashMat = new THREE.MeshStandardMaterial({ color: 0x191208, roughness: 0.85, metalness: 0.15 });
+    const trimMat = new THREE.MeshStandardMaterial({ color: 0x2a1a06, metalness: 0.6, roughness: 0.4 });
+
+    // dash shelf + knee panel
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(3.9, 0.34, 0.4), dashMat);
+    dash.position.set(0, -0.62, -1.55);
+    dash.rotation.x = -0.18;
+    c.add(dash);
+    const knee = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.42, 0.26), dashMat);
+    knee.position.set(0, -0.96, -1.02);
+    c.add(knee);
+
+    // windshield frame: A-pillars + roof bar
+    const pillarGeo = new THREE.BoxGeometry(0.13, 1.2, 0.14);
+    for (const px of [-1.55, 1.55]) {
+      const p = new THREE.Mesh(pillarGeo, dashMat);
+      p.position.set(px, -0.08, -1.52);
+      c.add(p);
+    }
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.15, 0.16), dashMat);
+    roof.position.set(0, 0.62, -1.52);
+    c.add(roof);
+
+    // steering wheel (right-hand drive)
+    const wheelGroup = new THREE.Group();
+    wheelGroup.position.set(0.46, -0.3, -1.12);
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.5, 10), trimMat);
+    col.rotation.x = 1.25;
+    col.position.z = 0.22;
+    wheelGroup.add(col);
+    const wheelTex = canvasTex(128, 128, (ctx, w, h) => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#0d0a05';
+      ctx.beginPath(); ctx.arc(w / 2, h / 2, w * 0.46, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ff8c1f';
+      ctx.lineWidth = w * 0.07;
+      ctx.beginPath(); ctx.arc(w / 2, h / 2, w * 0.46, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#b35c14';
+      ctx.lineWidth = w * 0.05;
+      for (let i = 0; i < 3; i++) {
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+        ctx.rotate(i * Math.PI * 2 / 3);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -h * 0.42); ctx.stroke();
+        ctx.restore();
+      }
+      ctx.fillStyle = '#ffd23d';
+      ctx.beginPath(); ctx.arc(w / 2, h / 2, w * 0.1, 0, Math.PI * 2); ctx.fill();
+    });
+    const wheel = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.3, 0.045, 26),
+      new THREE.MeshBasicMaterial({ map: wheelTex })
+    );
+    wheel.rotation.x = -1.15;
+    wheelGroup.add(wheel);
+    c.add(wheelGroup);
+    cockpitWheel = wheel;
+
+    // speedometer gauge (orange flat dial)
+    const gaugeTex = canvasTex(160, 160, (ctx, w, h) => {
+      const cx = w / 2, cy = h / 2, R = w * 0.44;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#15100a';
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ff3b10';
+      ctx.lineWidth = w * 0.05;
+      ctx.beginPath(); ctx.arc(cx, cy, R * 0.86, Math.PI * 0.32, Math.PI * 0.75); ctx.stroke();   // redline
+      ctx.strokeStyle = '#ff8c1f';
+      ctx.lineWidth = w * 0.022;
+      for (let i = 0; i <= 48; i++) {
+        const a = -Math.PI * 0.75 + (i / 48) * (Math.PI * 1.5);
+        const r1 = R * 0.86, r2 = (i % 6 === 0) ? R * 0.7 : R * 0.79;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+        ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#ffd23d';
+      ctx.font = 'bold ' + Math.round(w * 0.11) + 'px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let i = 0; i <= 8; i++) {
+        const a = -Math.PI * 0.75 + (i / 8) * (Math.PI * 1.5);
+        ctx.fillText(String(i * 30), cx + Math.cos(a) * R * 0.63, cy + Math.sin(a) * R * 0.63);
+      }
+      ctx.fillStyle = '#ffb347';
+      ctx.font = 'bold ' + Math.round(w * 0.07) + 'px monospace';
+      ctx.fillText('KM/H', cx, cy + R * 0.34);
+    });
+    const gaugePivot = new THREE.Group();
+    gaugePivot.position.set(0.12, -0.05, -1.53);
+    const face = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.66, 0.66),
+      new THREE.MeshBasicMaterial({ map: gaugeTex, transparent: true, opacity: 0.96 })
+    );
+    gaugePivot.add(face);
+    c.add(gaugePivot);
+
+    // needle spins on its own pivot so the dial stays still
+    const needlePivot = new THREE.Group();
+    needlePivot.position.copy(gaugePivot.position);
+    const needle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.022, 0.18, 0.012),
+      new THREE.MeshBasicMaterial({ color: 0xff8c1f })
+    );
+    needle.position.y = 0.085;
+    needlePivot.add(needle);
+    const cap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 0.02, 10),
+      new THREE.MeshBasicMaterial({ color: 0xffd23d })
+    );
+    cap.rotation.x = Math.PI / 2;
+    needlePivot.add(cap);
+    c.add(needlePivot);
+    cockpitNeedlePivot = needlePivot;
+
+    cockpit = c;
+    camera.add(c);
+    c.visible = false;
+  }
+
+  function toggleCam() {
+    camMode = camMode === 'chase' ? 'cockpit' : 'chase';
+    AudioFX.sfx.ui();
+  }
+
   /* ---------------- HUD ---------------- */
   function cacheHud() {
     const $ = (id) => document.getElementById(id);
@@ -1078,9 +1228,9 @@ const Game = (() => {
     /* --- invulnerability blink --- */
     invuln = Math.max(0, invuln - dt);
     if (invuln > 0) {
-      player.group.visible = Math.floor(sceneT * 12) % 2 === 0;
+      if (camMode !== 'cockpit') player.group.visible = Math.floor(sceneT * 12) % 2 === 0;
     } else {
-      player.group.visible = true;
+      if (camMode !== 'cockpit') player.group.visible = true;
       document.getElementById('damage-vignette').style.opacity = 0;
     }
 
@@ -1215,13 +1365,33 @@ const Game = (() => {
 
     /* --- camera --- */
     const k = 1 - Math.exp(-dt * 5.2);
-    const lookX = player.x * 0.42;
-    camera.position.x += (player.x * 0.66 - camera.position.x) * k;
-    camera.position.y += (camBase.y + speed * 0.012 + shake - camera.position.y) * k;
-    camera.position.z += (camBase.z + speed * 0.012 - camera.position.z) * k;
-    camera.lookAt(lookX, 1.15, -3);
+    if (camMode === 'cockpit') {
+      // inside the car: frame the dashboard + steering wheel, nose through the windshield
+      const lookX = player.x + player.steer * 3.4;
+      camera.position.x += (player.x - camera.position.x) * k;
+      camera.position.y += (1.06 + shake - camera.position.y) * k;
+      camera.position.z += (PLAYER_Z - camera.position.z) * k;
+      camera.lookAt(lookX, 1.06, -70);
+    } else {
+      const lookX = player.x * 0.42;
+      camera.position.x += (player.x * 0.66 - camera.position.x) * k;
+      camera.position.y += (camBase.y + speed * 0.012 + shake - camera.position.y) * k;
+      camera.position.z += (camBase.z + speed * 0.012 - camera.position.z) * k;
+      camera.lookAt(lookX, 1.15, -3);
+    }
 
-    const targetFov = camBase.fov + (speed / diff.maxSpeed) * 12 + (drifting ? 3.5 : 0);
+    // cockpit interior reacts to the driver
+    if (cockpitWheel) {
+      cockpitWheel.rotation.z = -player.steer * 7 - player.skid * 0.12;
+    }
+    if (cockpitNeedlePivot) {
+      cockpitNeedlePivot.rotation.z = -Math.PI * 0.75 + Math.min(1, speed * 3.6 / 240) * Math.PI * 1.5;
+    }
+
+    const targetFov = (camMode === 'cockpit'
+      ? camBase.fov + 12 + (speed / diff.maxSpeed) * 6
+      : camBase.fov + (speed / diff.maxSpeed) * 12)
+      + (drifting ? 3.5 : 0);
     if (Math.abs(camera.fov - targetFov) > 0.05) {
       camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 4);
       camera.updateProjectionMatrix();
@@ -1265,6 +1435,10 @@ const Game = (() => {
     } else if (state === 'paused' || state === 'gameover') {
       Particles.update(dt);
       Smoke.update(dt);
+    }
+    if (cockpit) {
+      cockpit.visible = camMode === 'cockpit' && (state === 'playing' || state === 'dying');
+      if (camMode === 'cockpit') player.group.visible = false;  // we are inside the car — don't render its body
     }
     renderer.render(scene, camera);
   }
@@ -1314,6 +1488,7 @@ const Game = (() => {
     makeStreaks();
     updateDayNight();                  // re-paint with lights + scenery for the current time of day
     makePlayer();
+    makeCockpit();
 
     Bolts.init(scene);
     Particles.init(scene);
@@ -1367,6 +1542,7 @@ const Game = (() => {
     setInput,
     setCar,
     setTime,
+    toggleCam,
     refillAmmo,
     CAR_OPTIONS,
     get state() { return state; },

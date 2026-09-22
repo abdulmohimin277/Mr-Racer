@@ -331,6 +331,7 @@ kbd {
   left: 20px;
   right: 20px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
@@ -382,6 +383,8 @@ kbd {
   transition: transform 0.1s ease, background 0.15s ease;
 }
 .touch-pause:active { transform: scale(0.92); background: rgba(255, 140, 31, 0.25); }
+/* camera toggle button is narrower so it fits beside pause */
+.touch-cam { min-width: 70px; }
 
 .hud-mid {
   position: absolute;
