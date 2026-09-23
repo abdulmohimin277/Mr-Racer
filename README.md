@@ -1,6 +1,6 @@
 # 🏎️ NEON RUSH — 3D Highway Racer
 
-A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** (procedural 3D models — no external 3D assets needed).
+A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** (procedural 3D models — no external 3D assets needed) with **anime.js** powering the smooth menu / panel / popup animations.
 
 ## ✅ Features
 
@@ -36,8 +36,10 @@ A fully 3D highway car-racing game built with **vanilla JavaScript + Three.js** 
 - **Day / night cycle** — optional: the highway world can roll through DAY → SUNSET → NIGHT → SUNRISE on a loop (windows light up at night, neon strips burn brighter); DAY is the default theme
 - **Busy traffic** — dense traffic with **convoys** (streams of cars in one lane) and side-by-side **wall formations** on harder difficulties
 - **Main menu** — a clean hub with **5 options**: **PLAY**, **OPTIONS** (controls, difficulty, sound/music,
-  time of day), **HOW TO PLAY**, **GARAGE** (6 cars + 8 paints), and an **ABOUT** page that credits the makers
-  and lists everything the game can do
+  time of day, weather), **HOW TO PLAY**, **GARAGE** (6 cars + 8 paints), and an **ABOUT** page that credits
+  the makers and lists everything the game can do
+- **Smooth animations (anime.js)** — menu cards pop in with a spring feel, screens fade between each other,
+  the logo slides in on launch, a new-best badge bounces on game over, and the HORN button pulses when honked
 - **HUD** — live score, coins, best, speedometer, gun-charge bar and 3 lives
 - **Game over & pause screens**, near-miss bonuses, crash damage vignette, floating score popups
 - **WebAudio sound** — synth engine hum, laser shots, coins, explosions, crash, and a driving music loop
@@ -112,9 +114,9 @@ It was built with vanilla JavaScript + Three.js (procedural 3D models, no extern
 ## 📁 Project structure
 
 ```
-index.html          – page, menus, HUD markup
+index.html          – page, menus, HUD markup (Three.js + anime.js CDN)
 css/style.css       – dark blue theme (no gradients)
-js/main.js          – screens, input, buttons, touch controls
+js/main.js          – screens, input, buttons, touch controls, anime.js animations
 js/game.js          – 3D world, highway, traffic, coins, blaster, game loop
 js/car.js           – procedural 3D car models
 js/effects.js       – bullets, explosions, particles, floating text

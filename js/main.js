@@ -5,9 +5,28 @@
 
 (() => {
   const $ = (id) => document.getElementById(id);
+
+  // ---------- anime.js helpers (fully optional — game works without it) ----------
+  const A = (typeof anime !== 'undefined') ? anime : null;
+  const popIn = (el, extra) => {
+    if (!A || !el) return;
+    A(Object.assign(
+      { targets: el, opacity: [0, 1], translateY: [26, 0], scale: [0.96, 1],
+        duration: 380, easing: 'easeOutCubic' },
+      extra || {}
+    ));
+  };
+  const screenFade = (el) => {
+    if (A && el) A({ targets: el, opacity: [0, 1], duration: 240, easing: 'easeOutQuad' });
+  };
+
   const showScreen = (id) => {
     document.querySelectorAll('.screen').forEach((s) => s.classList.add('hidden'));
-    $(id).classList.remove('hidden');
+    const target = $(id);
+    target.classList.remove('hidden');
+    screenFade(target);
+    const card = (target && typeof target.querySelector === 'function') ? target.querySelector('.menu-card') : null;
+    if (card) popIn(card);
     AudioFX.sfx.ui();
   };
 
@@ -39,7 +58,11 @@
       Game.onGameOver = (stats) => onGameOver(stats);
       Game.onFirstFrame = () => {
         updateBestBadge();
-        setTimeout(() => showScreen('screen-menu'), 350);
+        setTimeout(() => {
+          showScreen('screen-menu');
+          const logo = document.querySelector('#screen-menu .logo');
+          if (A && logo) A({ targets: logo, translateY: [-20, 0], opacity: [0, 1], duration: 480, easing: 'easeOutCubic' });
+        }, 350);
       };
       Game.init($('game-root'));
     } catch (err) {
@@ -81,7 +104,19 @@
     $('go-kills').textContent = stats.kills;
     $('new-best-badge').classList.toggle('hidden', !isNewBest);
     updateBestBadge();
-    setTimeout(() => showScreen('screen-gameover'), 250);
+    setTimeout(() => {
+      showScreen('screen-gameover');
+      if (A && isNewBest) {
+        A({ targets: '#new-best-badge', scale: [0.5, 1.12, 1], duration: 650, easing: 'easeOutCubic' });
+      }
+    }, 250);
+  }
+
+  // horn + little button shake via anime.js
+  function honkFx() {
+    AudioFX.sfx.horn();
+    const btn = document.querySelector('.tbtn-horn');
+    if (A && btn) A({ targets: btn, scale: [1, 1.22, 1], duration: 150, easing: 'easeOutQuad' });
   }
 
   /* ================= buttons ================= */
@@ -266,7 +301,7 @@
           Game.refillAmmo();
           break;
         case 'KeyH':
-          if (!e.repeat) AudioFX.sfx.horn();
+          if (!e.repeat) honkFx();
           break;
         case 'KeyL':
           if (!e.repeat) {
@@ -307,7 +342,7 @@
     if (document.body) document.body.classList.add('touch');
 
     const bind = (el, key) => {
-      const press = (e) => { e.preventDefault(); if (key === 'horn' && !input.horn) AudioFX.sfx.horn(); input[key] = true; AudioFX.ensure(); };
+      const press = (e) => { e.preventDefault(); if (key === 'horn' && !input.horn) honkFx(); input[key] = true; AudioFX.ensure(); };
       const release = (e) => { e.preventDefault(); input[key] = false; };
       el.addEventListener('pointerdown', press);
       el.addEventListener('pointerup', release);

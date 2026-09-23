@@ -241,6 +241,7 @@
           <li><b>Camera</b> — chase or cockpit view, always fixed ahead</li>
           <li><b>Keyboard &amp; touch</b> — plays with keys or on-screen buttons</li>
           <li><b>Best score</b> — saved on your device</li>
+          <li><b>Anime.js</b> — smooth menu, panels &amp; popup animations</li>
         </ul>
       </div>
 
@@ -312,6 +313,13 @@
     // Fallback CDN if the first one fails
     if (typeof THREE === 'undefined') {
       document.write('<script src="https://unpkg.com/three@0.160.0/build/three.min.js"><\/script>');
+    }
+  </script>
+  <!-- anime.js (CDN with fallback) for smooth UI/menu/HUD animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+  <script>
+    if (typeof anime === 'undefined') {
+      document.write('<script src="https://unpkg.com/animejs@3.2.2/lib/anime.min.js"><\/script>');
     }
   </script>
   <script src="js/audio.js"></script>
